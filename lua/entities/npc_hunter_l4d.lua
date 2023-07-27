@@ -394,13 +394,13 @@ function ENT:Initialize()
 
 		end)
 	end	
-	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
+	--[[timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (!GetConVar("ai_disabled"):GetBool()) then
 			self:EmitSound(table.Random({"hunterZombie.Voice"}))
 		end
 
-	end)
+	end)]]-- ALSO BROKEN
 end
 
 function ENT:HandleStuck()
