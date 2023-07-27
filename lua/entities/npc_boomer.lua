@@ -405,13 +405,13 @@ function ENT:Initialize()
 
 		end)
 	end	
-	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
+	--[[timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (!GetConVar("ai_disabled"):GetBool()) then
 			self:EmitSound(table.Random({"BoomerZombie.Voice"}))
 		end
 
-	end)
+	end)]]-- BROKEN, DEFINE THE TABLE FIRST
 end
 
 function ENT:HandleStuck()
