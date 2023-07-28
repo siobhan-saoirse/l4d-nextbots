@@ -9,7 +9,7 @@ local function getAllInfected()
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
 			if (v:GetClass() == "infected") then
-				if (v:Health() > 1) then
+				if (v:Health() > 0) then
 					table.insert(npcs, v)
 				end
 			end
