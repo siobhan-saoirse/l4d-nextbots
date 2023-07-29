@@ -377,13 +377,13 @@ function ENT:Initialize()
 
 		end)
 	end	
-	--[[timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
+	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (!GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound(table.Random({"jockeyZombie.Voice"}))
+			self:EmitSound("jockeyZombie.Voice")
 		end
 
-	end)]]-- ALSO BROKEN
+	end)
 end
 
 function ENT:HandleStuck()
@@ -1109,7 +1109,7 @@ function ENT:Think()
 						self.Ready = false
 						self.WasAttackingDoor = true
 						self:SetEnemy(nil)
-						local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+						local selanim = self:LookupSequence("jockey_melee")
 						local anim = self:GetSequenceActivity(selanim)
 						self.MeleeAttackDelay = CurTime() + 1.0
 						self:AddGesture(anim)
@@ -1129,7 +1129,7 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+							local selanim = self:LookupSequence("jockey_melee")
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
@@ -1142,6 +1142,7 @@ function ENT:Think()
 						self:SetPoseParameter("move_y",0)
 					end
 				end
+				--[[
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
@@ -1214,7 +1215,7 @@ function ENT:Think()
 							end
 						end
 					end
-				end
+				end]]
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
 					self.loco:SetAcceleration(-270)
@@ -1224,10 +1225,7 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							if (math.random(1,6) == 1) then
-								self:EmitSound("PlayerZombie.Attack")
-							end
-							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+							local selanim = self:LookupSequence("jockey_melee")
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
