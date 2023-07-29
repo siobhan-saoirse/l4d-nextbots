@@ -133,12 +133,12 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 						
 					if (!string.find(snd.Entity:GetSequenceName(snd.Entity:GetSequence()),"run_")) then
 						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_STATIC
+						snd.Channel = CHAN_BODY
 						snd.Volume = 0.85
 						snd.SoundLevel = 95
 					else
 						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_STATIC
+						snd.Channel = CHAN_BODY
 						snd.Volume = 0.5
 						snd.SoundLevel = 95
 					end
