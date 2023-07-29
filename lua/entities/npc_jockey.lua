@@ -1483,7 +1483,7 @@ if CLIENT then
 	end 
 end 
 list.Set( "NPC", "jockey", {
-	Name = "The jockey",
+	Name = "The Jockey",
 	Class = "npc_jockey",
 	Category = "Left 4 Dead 2"
 })

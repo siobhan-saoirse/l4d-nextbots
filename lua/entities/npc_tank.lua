@@ -43,7 +43,7 @@ local function lookForNextPlayer(ply)
 
 				else
 
-					if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
+					if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
 						if (v:Health() > 1) then
 							table.insert(npcs, v)
 						end
