@@ -380,7 +380,8 @@ local zombies = {
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
-	"npc_tank"
+	"npc_tank",
+	"npc_tank_vs"
 }
 
 local zombie2 = {

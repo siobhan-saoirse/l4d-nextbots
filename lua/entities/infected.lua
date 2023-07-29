@@ -2317,7 +2317,7 @@ function ENT:OnKilled( dmginfo )
 		end
 		self.Ready = false
 		self:PlaySequenceAndMove(self:LookupSequence(death))
-		if (!dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_CRUSH) and !dmginfo:IsDamageType(DMG_CLUB) and !dmginfo:IsDamageType(DMG_DROWN) and !dmginfo:IsDamageType(DMG_SLASH)) then
+		if (math.random(1,8) == 1 and !dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_CRUSH) and !dmginfo:IsDamageType(DMG_CLUB) and !dmginfo:IsDamageType(DMG_DROWN) and !dmginfo:IsDamageType(DMG_SLASH)) then
 			timer.Create("Dying"..self:EntIndex(), 0, 0, function()
 				if (IsValid(self) and !self.PlayingSequence2) then
 					self:BecomeRagdoll(dmginfo)
