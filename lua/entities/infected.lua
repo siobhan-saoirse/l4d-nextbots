@@ -44,7 +44,7 @@ local function nearestNPC(ply)
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 500 )) do
 			if (v:IsNPC() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex()) then
-				if (v:Health() > 1) then
+				if (v:Health() > 0) then
 					table.insert(npcs, v)
 				end
 			end
@@ -1657,7 +1657,7 @@ function ENT:Think()
 			if (math.random(1,4) == 1) then
 				for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
 					if (IsValid(v)) then
-						if (table.Count(getAllInfected()) > 30) then
+						if (table.Count(getAllInfected()) >= 30) then -- now thats 30
 							self:Remove()
 						end
 					end
@@ -2321,21 +2321,12 @@ function ENT:OnKilled( dmginfo )
 			timer.Create("Dying"..self:EntIndex(), 0, 0, function()
 				if (IsValid(self) and !self.PlayingSequence2) then
 					self:BecomeRagdoll(dmginfo)
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
 			end)
 		else
 			if (IsValid(self)) then
 				self:BecomeRagdoll(dmginfo)
-				timer.Simple(0.1, function()
-					if (IsValid(self)) then
-						self:Remove()
-					end
-				end)
+				--becomeragdoll already removes self, POSSIBLE crash fix?
 			end
 		end		
 		--self:BecomeRagdoll(dmginfo)
