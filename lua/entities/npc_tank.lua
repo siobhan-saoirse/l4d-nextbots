@@ -421,6 +421,15 @@ function ENT:Initialize()
 		if SERVER then
 			self:AddGestureSequence(anim,false)
 		end
+		if (self.IsVersus) then
+			for k,v in ipairs(ents.FindByClass("npc_tank")) do
+				v.Music:Stop()
+			end
+			self.Music:PlayEx(1.0,100)
+			if (!self.MusicPlayed) then
+				self.MusicPlayed = true
+			end
+		end
 	end	
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,10), 0, function()
 	
@@ -1325,26 +1334,29 @@ function ENT:ChaseEnemy( options )
 	
 	if ( !path:IsValid() ) then return "failed" end
 
-	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2 and !self.IsVersus) then 
-			local mad = "rage_at_enemy_0"..table.Random({"1","2","3","4"})
-			self:PlaySequenceAndMove( mad ) 
-			for k,v in ipairs(ents.FindByClass("npc_tank")) do
-				v.Music:Stop()
+	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2) then 
+			if (!self.IsVersus) then
+				local mad = "rage_at_enemy_0"..table.Random({"1","2","3","4"})
+				self:PlaySequenceAndMove( mad ) 
 			end
-			self.Music:PlayEx(1.0,100)
-			if (!self.MusicPlayed) then
-				self.MusicPlayed = true
+			if (!self.IsVersus) then
+				for k,v in ipairs(ents.FindByClass("npc_tank")) do
+					v.Music:Stop()
+				end
+				self.Music:PlayEx(1.0,100)
+				if (!self.MusicPlayed) then
+					self.MusicPlayed = true
+				end
+				timer.Simple(self:SequenceDuration(mad), function()
+						if (string.find(self:GetModel(),"mud")) then
+		
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+		
+						else
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+						end
+				end)
 			end
-			timer.Simple(self:SequenceDuration(mad), function()
-					if (string.find(self:GetModel(),"mud")) then
-	
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-	
-					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
-					end
-			end)
-	
 			self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
