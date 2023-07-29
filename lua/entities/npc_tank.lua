@@ -20,7 +20,11 @@ end
 local function lookForNextPlayer(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
-		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 1210 )) do
+		local range = 1210
+		if (ply.IsVersus) then
+			range = 12000
+		end
+		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), range )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
@@ -29,10 +33,22 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
-					if (v:Health() > 1) then
-						table.insert(npcs, v)
+				if (!ply.IsVersus) then
+
+					if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+						if (v:Health() > 1) then
+							table.insert(npcs, v)
+						end
 					end
+
+				else
+
+					if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
+						if (v:Health() > 1) then
+							table.insert(npcs, v)
+						end
+					end
+
 				end
 			end
 		end
@@ -1604,7 +1620,7 @@ function ENT:OnKilled( dmginfo )
 		self.Ready = false
 		self:PlaySequenceAndMove(self:LookupSequence(death))
 			timer.Stop("Dying"..self:EntIndex())
-			timer.Create("Dying"..self:EntIndex(), 0, 0, function()
+			timer.Create("Dying"..self:EntIndex(), 0.2, 0, function()
 				if (IsValid(self) and !self.PlayingSequence2) then
 					self:EmitSound("PlayerZombie.Die")
 					self:BecomeRagdoll(dmginfo)

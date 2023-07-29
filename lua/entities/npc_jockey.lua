@@ -20,7 +20,7 @@ end
 local function lookForNextPlayer(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
-		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 1300 )) do
+		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 120000 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
@@ -29,7 +29,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -1470,11 +1470,6 @@ function ENT:OnKilled( dmginfo )
 					self:EmitSound("jockeyZombie.Death")
 						
 					self:BecomeRagdoll(dmginfo)
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
 	end
 end
