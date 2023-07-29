@@ -407,7 +407,7 @@ function ENT:Initialize()
 	end	
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
-		if (!GetConVar("ai_disabled"):GetBool()) then
+		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
 			self:EmitSound("BoomerZombie.Voice")
 		end
 

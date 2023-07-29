@@ -450,7 +450,7 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,10), 0, function()
 	
 		if (self.Ready) then 
-			if (!GetConVar("ai_disabled"):GetBool()) then
+			if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
 				if (IsValid(self:GetEnemy())) then
 					self:EmitSound("HulkZombie.Yell",75,math.random(95,105),1,CHAN_VOICE)
 				else

@@ -396,7 +396,7 @@ function ENT:Initialize()
 	end	
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
-		if (!GetConVar("ai_disabled"):GetBool()) then
+		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
 			self:EmitSound("hunterZombie.Voice")
 		end
 
@@ -1416,7 +1416,7 @@ function ENT:OnInjured( dmginfo )
 		end
 	end
 	if ((math.random(1,20) == 1 || dmginfo:IsDamageType(DMG_BLAST) || dmginfo:IsDamageType(DMG_CLUB))) then
-		local selanim = table.Random({"Shoved_Backward""Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+		local selanim = table.Random({"Shoved_Backward_01","Shoved_Backward_02","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
 		if (self.Pounced) then
 			selanim = table.Random({"Melee_pounce_Knockoff_Backward","Melee_pounce_Knockoff_Forward","Melee_pounce_Knockoff_l","Melee_pounce_Knockoff_r"})
 			self.Pounced = false
