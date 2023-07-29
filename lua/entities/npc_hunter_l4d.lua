@@ -1017,7 +1017,7 @@ function ENT:Think()
 				end
 				self:EmitSound("hunterZombie.Fall")
 				self.FallDamage = 10;
-				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.2, 0, function()
+				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.8, 0, function()
 					if (!self:IsOnGround()) then
 
 						self:EmitSound("HunterZombie.Pounce.FlyLoop")
@@ -1046,7 +1046,7 @@ function ENT:Think()
 				if (self.Pouncing) then
 					self:EmitSound("HunterZombie.Pounce.Miss")
 				else
-					self:EmitSound("PlayerZombie.Thud")
+					self:EmitSound("PlayerZombie.JumpLand")
 				end
 				self.HaventLandedYet = false
 			end

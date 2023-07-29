@@ -84,6 +84,7 @@ ENT.HaventLandedYet = false
 ENT.Walking = false
 ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
+ENT.IsVersus = false
 local modeltbl = {
 	"models/infected/hulk.mdl",
 	"models/infected/hulk.mdl",
@@ -784,10 +785,10 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						v:EmitSound("PlayerZombie.AttackHit")
 						timer.Simple(0.1, function()
 						
-							if (v:Health() < 0 and !self.PlayingSequence3) then
+							if (v:Health() < 0 and !self.PlayingSequence3 and !self.IsVersus) then
 								local selanim = table.Random({"Rage_at_Knockdown_01","Rage_at_Knockdown_02","Rage_at_Knockdown_03"})
 								local anim = self:LookupSequence(selanim)
-								self:EmitSound("HulkZombie.RageAtVictim")
+								self:EmitSound("HulkZombie.Yell")
 								self:PlaySequenceAndMove(anim)
 								timer.Simple(self:SequenceDuration(anim) - 0.2,function()
 									if (self:IsOnGround() and self.Ready and !self.PlayingSequence3) then
@@ -1324,7 +1325,7 @@ function ENT:ChaseEnemy( options )
 	
 	if ( !path:IsValid() ) then return "failed" end
 
-	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2) then 
+	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2 and !self.IsVersus) then 
 			local mad = "rage_at_enemy_0"..table.Random({"1","2","3","4"})
 			self:PlaySequenceAndMove( mad ) 
 			for k,v in ipairs(ents.FindByClass("npc_tank")) do

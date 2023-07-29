@@ -976,7 +976,7 @@ function ENT:Think()
 						end
 					end
 				self:TakeDamage(self.FallDamage,self,self)
-				self:EmitSound("PlayerZombie.Thud")
+				self:EmitSound("PlayerZombie.JumpLand")
 				self.HaventLandedYet = false
 			end
 		end
