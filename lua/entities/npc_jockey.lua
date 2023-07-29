@@ -2,13 +2,13 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_tank", "Tank")
+	language.Add("npc_jockey", "jockey")
 end
 local function getAllInfected()
 	local npcs = {}
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
-			if (v:GetClass() == "npc_tank") then
+			if (v:GetClass() == "npc_jockey") then
 				if (v:Health() > 1) then
 					table.insert(npcs, v)
 				end
@@ -20,11 +20,7 @@ end
 local function lookForNextPlayer(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
-		local range = 1210
-		if (ply.IsVersus) then
-			range = 12000
-		end
-		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), range )) do
+		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 120000 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
@@ -33,22 +29,10 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if (!ply.IsVersus) then
-
-					if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
-						if (v:Health() > 1) then
-							table.insert(npcs, v)
-						end
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+					if (v:Health() > 1) then
+						table.insert(npcs, v)
 					end
-
-				else
-
-					if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
-						if (v:Health() > 1) then
-							table.insert(npcs, v)
-						end
-					end
-
 				end
 			end
 		end
@@ -71,8 +55,8 @@ end
 local function nearestDoor(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
-		for k,v in ipairs(ents.FindInSphere(ply:GetPos(),190)) do
-			if (((v:GetClass() == "prop_door_rotating" and v:GetPos():Distance(ply:GetPos()) < 70) or v:GetClass() == "prop_physics") ) then
+		for k,v in ipairs(ents.FindInSphere(ply:GetPos(),120)) do
+			if ((v:GetClass() == "prop_door_rotating" or v:GetClass() == "prop_physics")  and v:GetPos():Distance(ply:GetPos()) < 70) then
 				table.insert(npcs, v)
 			end
 		end
@@ -91,37 +75,22 @@ ENT.Type			= "nextbot"
 ENT.Name			= "Tank"
 ENT.Spawnable		= false
 ENT.AttackDelay = 50
-ENT.AttackDamage = 30
-ENT.AttackRange = 100
-ENT.AttackRange2 = 190
-ENT.RangedAttackRange = 600
+ENT.AttackDamage = 6
+ENT.AttackRange = 65
+ENT.AttackRange2 = 120
+ENT.RangedAttackRange = 1800
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
 ENT.Walking = false
 ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
-ENT.IsVersus = false
 local modeltbl = {
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk.mdl",
-	"models/infected/hulk_l4d1.mdl",
-	"models/infected/hulk_dlc3.mdl",
-}
-local MusicTable = {
-	"Event.Tank",
-	"Event.TankMidpoint",
+	"models/infected/jockey.mdl",
 }
 
-hook.Add("EntityEmitSound","TankHearSound",function(snd)
+hook.Add("EntityEmitSound","jockeyHearSound",function(snd)
 	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/hulk") and string.find(snd.SoundName, "step") then
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/boom") and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
@@ -131,7 +100,7 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 			snd.Channel = CHAN_BODY
 			local speed = snd.Entity:GetVelocity():Length()
 			local groundspeed = snd.Entity:GetVelocity():Length2DSqr()
-			snd.Volume = 0.5
+			snd.Volume = 1
 			--[[
 	if (IsMounted("left4dead") or IsMounted("left4dead2")) then 
 				local pos = snd.Entity:GetPos()
@@ -145,37 +114,30 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 					end
 				end
 			end]]
-				if (snd.Entity:WaterLevel() < 1) then
-						
-					if (!string.find(snd.Entity:GetSequenceName(snd.Entity:GetSequence()),"run_")) then
-						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_BODY
-						snd.Volume = 0.85
-						snd.SoundLevel = 95
-					else
-						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_BODY
-						snd.Volume = 0.5
-						snd.SoundLevel = 95
-					end
-
-				elseif (snd.Entity:WaterLevel() < 2) then
-					snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk_water_0"..math.random(1,6)..".wav")
-					snd.Channel = CHAN_STATIC
-					snd.Volume = 0.5
-					snd.SoundLevel = 95
-				else
-					snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk_water_0"..math.random(1,6)..".wav")
-					snd.Channel = CHAN_STATIC
-					snd.Volume = 0.5
-					snd.SoundLevel = 95
-				end
+				
+			if (snd.Entity:WaterLevel() < 1) then  
+				snd.SoundName = string.Replace(snd.SoundName, "player/footsteps/", "player/footsteps/infected/run/")
+				snd.Volume = 0
+			elseif (snd.Entity:WaterLevel() < 2) then
+				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
+				snd.Volume = 0
+			else
+				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
+				snd.Volume = 0
+			end
 			snd.Pitch = math.random(95,105)
 			return true
-		end
-		if ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
+		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"female") and string.find(snd.Entity:GetModel(),"jockey") then
+			snd.SoundName = string.Replace(snd.SoundName, "female", "male")
+			
+			return true
+		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"/male") and string.find(snd.Entity:GetModel(),"boomette") then
+			snd.SoundName = string.Replace(snd.SoundName, "male", "female")
+			
+			return true
+		elseif ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
 			for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
-				if (v:GetClass() == "npc_tank" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
+				if (v:GetClass() == "npc_jockey" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
 					v:SetEnemy(snd.Entity)
 				end
 			end
@@ -233,7 +195,7 @@ function ENT:CanSee(ply, fov)
 end
 
 function ENT:Shove(anim)
-	self:EmitSound("HulkZombie.Shoved")
+	self:EmitSound("jockeyZombie.Shoved")
 end
 
 -- these 6 funcs are not mine, by dragoteryx
@@ -261,7 +223,7 @@ function ENT:PlaySequenceAndMove(seq, options, callback)
 			if isvector(options.multiply) then
 				vec = Vector(vec.x*options.multiply.x, vec.y*options.multiply.y, vec.z*options.multiply.z)
 			end
-			vec:Rotate(self:GetAngles() + angles)	
+			vec:Rotate(self:GetAngles() + angles)
 			self:SetAngles(self:LocalToWorldAngles(angles))
 			if (self:IsOnGround()) then
 				previousPos = self:GetPos() + vec*self:GetModelScale()
@@ -294,11 +256,16 @@ function ENT:TraceHull(vec,data)
 	end
 	local trdata = {}
 	data = data or {}
-	bound2.z = self.loco:GetStepHeight()
+	if self.IsDrGNextbot and data.step then
+		bound2.z = self.loco:GetStepHeight()
+	end
 	trdata.start = data.start or self:GetPos()
 	trdata.endpos = data.endpos or trdata.start + vec
 	trdata.collisiongroup = data.collisiongroup or self:GetCollisionGroup()
-	trdata.filter = data.filter or self
+	if self.IsDrGNextbot then
+		if SERVER then trdata.mask = data.mask or self:GetSolidMask() end
+		trdata.filter = data.filter or {self, self:GetWeapon(), self:GetPossessor()}
+	else trdata.filter = data.filter or self end
 	trdata.maxs = data.maxs or bound1
 	trdata.mins = data.mins or bound2
 	return util.TraceHull(trdata)
@@ -346,7 +313,7 @@ end
 
 function ENT:Initialize()
 
-	game.AddParticles( "particles/tank_fx.pcf" )
+	game.AddParticles( "particles/jockey_fx.pcf" )
 	if SERVER then
 		if (!self.DontReplaceModel) then
 			local rnd = table.Random(modeltbl)
@@ -362,7 +329,7 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
-	self:SetHealth(4000) 
+	self:SetHealth(325) 
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -379,9 +346,7 @@ function ENT:Initialize()
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
 		self:SetSkin(math.random(0,self:SkinCount()-1))
-		self.Music = CreateSound( self, table.Random(MusicTable), filter ) -- create the new sound, parented to the worldspawn (which always exists)
-		self.Music:PlayEx(1.0,100)
-		self.Music:FadeOut(0.01)
+		self:EmitSound("jockeyZombie.Gurgle")
 		for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
 			if (IsValid(v)) then
 				if (table.Count(getAllInfected()) > 30) then
@@ -404,59 +369,18 @@ function ENT:Initialize()
 		--self:SetBodygroup(0,math.random(1,2))
 		--self:SetBodygroup(1,math.random(1,2))
 		
-		local mad = self:GetSequenceActivity(self:LookupSequence("idle"))
+		local mad = self:GetSequenceActivity(self:LookupSequence("standing_idle"))
 		self:StartActivity( mad )
 		timer.Simple(1, function()
 		
 			self.Ready = true
 
 		end)
-		timer.Create("IdleExpression"..self:EntIndex(), 0, 0, function()
-			if (self:GetEnemy() != nil) then
-
-				local anim = self:LookupSequence("exp_angry_0"..math.random(1,6))
-				if SERVER then
-					self:AddGestureSequence(anim,true)
-				end
-		
-				
-				timer.Adjust("IdleExpression"..self:EntIndex(),self:SequenceDuration(anim) - 0.2)
-
-			else
-				
-				local anim = self:LookupSequence("exp_idle_0"..math.random(1,6))
-				if SERVER then
-					self:AddGestureSequence(anim,true)
-				end
-		
-				
-				timer.Adjust("IdleExpression"..self:EntIndex(),self:SequenceDuration(anim) - 0.2)
-			end
-		end)
-		local anim = self:LookupSequence("idlenoise")
-		if SERVER then
-			self:AddGestureSequence(anim,false)
-		end
-		if (self.IsVersus) then
-			for k,v in ipairs(ents.FindByClass("npc_tank")) do
-				v.Music:Stop()
-			end
-			self.Music:PlayEx(1.0,100)
-			if (!self.MusicPlayed) then
-				self.MusicPlayed = true
-			end
-		end
 	end	
-	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,10), 0, function()
+	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
-		if (self.Ready) then 
-			if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
-				if (IsValid(self:GetEnemy())) then
-					self:EmitSound("HulkZombie.Yell",75,math.random(95,105),1,CHAN_VOICE)
-				else
-					self:EmitSound(table.Random({"HulkZombie.Breathe"}))
-				end
-			end
+		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
+			self:EmitSound("jockeyZombie.Voice")
 		end
 
 	end)
@@ -483,7 +407,7 @@ end
 
 function ENT:OnRemove()
 	if SERVER then
-		self.Music:Stop()
+		self:StopSound("jockeyZombie.Gurgle")
 	end
 	timer.Stop("IdleExpression"..self:EntIndex())
 	timer.Stop("AngryExpression"..self:EntIndex())
@@ -498,6 +422,10 @@ end
 function ENT:SetEnemy(ent)
 	if (ent != nil and ent:IsNextBot()) then return end
 	self.Enemy = ent
+	self.Pounced = false
+	self:StopSound("JockeyZombie.Ride")
+	timer.Stop("jockeyPounce"..self:EntIndex())
+	timer.Stop("jockeyPounceShred"..self:EntIndex())
 	if (ent != nil) then
 		self.Idling = false
 	end
@@ -550,13 +478,13 @@ function ENT:HaveEnemy()
 					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 				else
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 				end
 			else
 				--self:SetCycle(0)
 				if (!self.Idling and !self.PlayingSequence3) then
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) )
+					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) 
 					self.Idling = true
 				end
 			end
@@ -580,7 +508,7 @@ function ENT:FindEnemy()
 				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsFriendly(self) and GAMEMODE:EntityTeam(v) != TEAM_SPECTATOR and GAMEMODE:EntityTeam(v) != TEAM_FRIENDLY and v:Health() > 1 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("HulkZombie.RageAtVictim")
+					--self:EmitSound("jockeyZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -619,10 +547,10 @@ function ENT:FindEnemy()
 				end
 			else
 
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("HulkZombie.RageAtVictim")
+					--self:EmitSound("jockeyZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -678,64 +606,18 @@ local function OpenLinkedAreaPortal(ent)
 	end
 end
 function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
-	if (event == 3002) then	
-			for k,v in ipairs(ents.FindByName("DebrisModel"..self:EntIndex())) do
-				v:Remove()
-			end
-			self:EmitSound("HulkZombie.Throw")
-			local p = ents.Create("base_anim")
-			p:SetModel("models/props_debris/concrete_chunk06c.mdl")
-			p:SetBodygroup(1, 1)
-			p:SetPos(self:GetPos() + Vector(0,0,80))
-			p:SetAngles(self:GetAngles())
-			p:SetCollisionGroup(COLLISION_GROUP_NPC)
-			p:PhysicsInit(SOLID_VPHYSICS)
-			p:SetOwner(self)
-			p:Spawn()
-			p:EmitSound("HulkZombie.Throw.FlyLoop")
-			 
-			local shouldvegoneforthehead = self:GetEnemy():EyePos()
-			local bone = 1
-			shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
-			local vel = ((shouldvegoneforthehead - self:EyePos()) * 8):Angle()
-			vel.p = vel.p
-			vel = vel:Forward() * 1800 -- * (self:GetPos():Distance(self:GetEnemy():GetPos()) * 0.007)
-	
-			
-			local phys = p:GetPhysicsObject() 
-			if phys then
-				p:GetPhysicsObject():AddVelocity(vel)
-				p:SetPhysicsAttacker(self)
-			end
-			
-			function p:PhysicsCollide( data, phys )
-				if ( data.Speed > 90 ) then 
-					if (IsValid(data.HitEntity)) then
-						ParticleEffect("tank_rock_throw_impact_chunks", self:GetPos(), self:GetAngles())
-						self:StopSound("HulkZombie.Throw.FlyLoop")
-						self:Remove()
-						self:EmitSound("HulkZombie.ThrownProjectileHit",95)
-					else
-						ParticleEffect("tank_rock_throw_impact_chunks", self:GetPos(), self:GetAngles())
-						self:StopSound("HulkZombie.Throw.FlyLoop")
-						self:Remove()
-						self:EmitSound("HulkZombie.ThrownProjectileHit",95)
-					end
-					
-				end
-			end	
-	elseif (event == 3001) then
+	if (event == 3001) then
 		if (IsValid(self.Door)) then
 
 			self.loco:ClearStuck() 
+			self:EmitSound(
+				"Doors.Wood.Pound1",
+				85, math.random(90,105)
+			)
+			debugoverlay.Text( self:GetPos(), "Breaking down door #"..self.Door:EntIndex().."!", 1.5,false )
+			debugoverlay.Box( self.Door:GetPos(), self.Door:OBBMins(), self.Door:OBBMaxs(), 1.5, Color( 128, 0, 0, 128) )
 			--self:SetCollisionGroup( )
 				if (self.Door:GetClass() != "prop_physics") then
-					self:EmitSound(
-						"Doors.Wood.Pound1",
-						85, math.random(90,105)
-					)
-					debugoverlay.Text( self:GetPos(), "Breaking down door #"..self.Door:EntIndex().."!", 1.5,false )
-					debugoverlay.Box( self.Door:GetPos(), self.Door:OBBMins(), self.Door:OBBMaxs(), 1.5, Color( 128, 0, 0, 128) )
 					debugoverlay.Text( self:GetPos(), "I broke it down! #"..self.Door:EntIndex().."", 1.5,false )
 					debugoverlay.Box( self.Door:GetPos(), self.Door:OBBMins(), self.Door:OBBMaxs(), 1.5, Color( 0, 255, 0, 128) )
 					self:EmitSound("Wood.Break")
@@ -762,80 +644,34 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						p:SetPhysicsAttacker(self)
 					end
 				else
-					local p = self.Door
-					self:EmitSound(
-						"HulkZombie.Punch",
-						85, 100
-					)		
-					local shouldvegoneforthehead = self:GetEnemy():EyePos()
-					local bone = 1
-					shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
-					local vel = ((shouldvegoneforthehead - self:EyePos()) * 8):Angle()
-					vel.p = vel.p
-					vel = vel:Forward() * 1800
+					self.Door:TakeDamage(999999999,self,self)
+					timer.Simple(0.1, function()
 					
-					local phys = p:GetPhysicsObject()
-					if phys then
-						p:GetPhysicsObject():AddVelocity(vel)
-						p:SetPhysicsAttacker(self)
-					end
-					self.Door = nil
+						self.Door:Remove()
+
+					end)
 				end
 				self:SetCollisionGroup(COLLISION_GROUP_NPC)
 
 		end
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
-				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 150)) do
+				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
 					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
-							"HulkZombie.Punch",
+							"Weapon_Knife.Hit",
 							85, 100
 						)
 						local dmginfo = DamageInfo()
 						dmginfo:SetAttacker(self)
 						dmginfo:SetInflictor(self)
-						dmginfo:SetDamageType(DMG_CRUSH)
+						dmginfo:SetDamageType(bit.bor(DMG_SLASH,DMG_CRUSH))
 						dmginfo:SetDamage(self.AttackDamage)
-						v:SetPos(v:GetPos() + Vector(0,0,30))
-						v:SetVelocity(v:GetAimVector() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 						end
 						v:TakeDamageInfo(dmginfo) 
-						if (v:IsPlayer()) then
-							v:SetViewPunchAngles(v:GetViewPunchAngles() + (Angle(120,0,0)))
-						end
-						v:EmitSound("PlayerZombie.AttackHit")
-						timer.Simple(0.1, function()
-						
-							if (v:Health() < 0 and !self.PlayingSequence3 and !self.IsVersus) then
-								local selanim = table.Random({"Rage_at_Knockdown_01","Rage_at_Knockdown_02","Rage_at_Knockdown_03"})
-								local anim = self:LookupSequence(selanim)
-								self:EmitSound("HulkZombie.Yell")
-								self:PlaySequenceAndMove(anim)
-								timer.Simple(self:SequenceDuration(anim) - 0.2,function()
-									if (self:IsOnGround() and self.Ready and !self.PlayingSequence3) then
-										if (self:GetEnemy() != nil) then
-											if (string.find(self:GetModel(),"mud")) then
-						
-												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-						
-											else
-												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
-											end
-										else
-											--self:SetCycle(0)
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
-											self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
-										end
-									end
-								end)
-	
-							end
-
-						end)
 					end
 				end
 			end
@@ -946,6 +782,76 @@ hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
 
 end)
 
+hook.Add("ScaleNPCDamage","jockeyDamage",function(npc,hitgroup,dmginfo)
+	
+	if (npc:GetClass() == "npc_jockey") then	
+		if (hitgroup == HITGROUP_HEAD) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_head")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+			dmginfo:ScaleDamage(3)
+		elseif (hitgroup == HITGROUP_CHEST) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_chest")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_STOMACH) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_stomach")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_LEFTLEG) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_leftleg")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_RIGHTLEG) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_rightleg")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end) 
+			end
+		elseif (hitgroup == HITGROUP_LEFTARM) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_left")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_RIGHTARM) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_right")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		end
+	end
+end)
 ----------------------------------------------------
 -- ENT:RunBehaviour()
 -- This is where the meat of our AI is
@@ -962,10 +868,10 @@ function ENT:RunBehaviour()
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
-				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle"))) then
+				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("standing_idle"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
-					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_4")) ) 
+					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run")) ) 
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
@@ -978,12 +884,12 @@ function ENT:RunBehaviour()
 					if (math.random(1,800) == 1) then
 						local act = self:GetSequenceActivity(self:LookupSequence("walk"))
 						self:StartActivity( act )
-						self.loco:SetDesiredSpeed( 210 * 0.5 )
+						self.loco:SetDesiredSpeed( 300 * 0.5 )
 						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
 						if (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk"))) then
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle")) ) 
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle")) ) 
 						end
 						self.Walking = false
 					end
@@ -1028,7 +934,7 @@ function ENT:BodyUpdate()
 	-- It sets the bot's move_x move_y pose parameters, sets their animation speed relative to the ground speed, and calls FrameAdvance.
 	-- 
 	if (self:IsOnGround() and (IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
-		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3) then
+		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3 || self.Pouncing) then
 			self:BodyMoveXY()
 			-- BodyMoveXY() already calls FrameAdvance, calling it twice will affect animation playback, specifically on layers
 			return
@@ -1080,17 +986,26 @@ function ENT:Think()
 		end
 		if (self.Idling and self:GetCycle() == 1 and !self.PlayingSequence3) then
 			self:SetCycle(0)
-			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
+			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) 
 		end
 		if (!self:IsOnGround()) then
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
 				self:ResetSequence("jump")
+				self:EmitSound("jockeyZombie.Fall")
+				self.FallDamage = 10;
+				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.8, 0, function()
+					if (!self:IsOnGround()) then
+
+						self:EmitSound("jockeyZombie.Pounce.FlyLoop")
+
+					end
+				end)
 				self.HaventLandedYet = true
 			end
 		else
 			if (self.HaventLandedYet) then
-				self:AddGestureSequence(self:LookupSequence("Jump_Land_gesture"))
+				self:AddGestureSequence(self:LookupSequence("Flinch_chest"))
 					if (self:IsOnGround()) then
 						if (self:GetEnemy() != nil) then
 							if (string.find(self:GetModel(),"mud")) then
@@ -1098,22 +1013,26 @@ function ENT:Think()
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 	
 							else
-								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 							end
 						else
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle"))  )
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) )
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  )
 						end
 					end
-				self:EmitSound("HulkZombie.Thud")
+				if (self.Pouncing) then
+					self:EmitSound("jockeyZombie.Pounce.Miss")
+				else
+					self:EmitSound("PlayerZombie.JumpLand")
+				end
 				self.HaventLandedYet = false
 			end
 		end
-		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_4")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
+		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
 			self:PlayActivityAndWait( self:GetActivity() )
-		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_4")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
+		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
 
-			local mad = self:GetSequenceActivity(self:LookupSequence("idle"))
+			local mad = self:GetSequenceActivity(self:LookupSequence("standing_idle"))
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
 			self.Idling = true
@@ -1142,7 +1061,10 @@ function ENT:Think()
 			for k, v in pairs(nearestDoor(self)) do
 				if (IsValid(v)) then
 					-- open a door if we see one blocking our path
-					self.Door = v
+					local targetpos = v:GetPos() + Vector(0, 0, 45)
+					if util.TraceLine({start = self:EyePos(), endpos = targetpos, filter = function( ent ) return ent == v end}).Entity == v then
+						self.Door = v
+					end
 				end
 			end
 			if (IsValid(self.AvoidingEntity) and self.AvoidingEntity:GetPos():Distance(self:GetPos()) > 120 ) then
@@ -1179,40 +1101,23 @@ function ENT:Think()
 			if (self.PlayingSequence2) then
 				self:SetPlaybackRate(1)
 			end
-			if (IsValid(self.Door) and !self.ContinueRunning and self.Door:GetPos():Distance(self:GetPos()) < self.RangedAttackRange) then
+			if (IsValid(self.Door) and !self.ContinueRunning and self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
 				local targetheadpos,targetheadang = self.Door:GetBonePosition(1) -- Get the position/angle of the head.
 				if (!self.MeleeAttackDelay2 or CurTime() > self.MeleeAttackDelay2) then
-					if (self.Door:GetPos():Distance(self:GetPos()) < self.RangedAttackRange) then
-						
-							if (self.Door:GetClass() == "prop_door_rotating" and self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
-								self.OldEnemy = self.Enemy
-								self:SetEnemy(nil)
-								self.WasAttackingDoor = true
-								local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
-								local anim = self:GetSequenceActivity(selanim)
-								self.MeleeAttackDelay = CurTime() + 2.0
-								self:AddGesture(anim)
-								self.loco:ClearStuck() 
-								self.DontWannaUseSameSequence = false
-								self.loco:ClearStuck() 
-								self:SetPlaybackRate(1)
-								--self:SetCycle(0)
-							else
-								if (!self.MeleeAttackDelay or CurTime() > self.MeleeAttackDelay) then
-									self:EmitSound("HulkZombie.Attack")
-									self.WasAttackingDoor = true
-									local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
-									local anim = self:GetSequenceActivity(selanim)
-									self.MeleeAttackDelay = CurTime() + 2.0
-									self:AddGesture(anim)
-									self.loco:ClearStuck() 
-									self.DontWannaUseSameSequence = false
-									self.loco:ClearStuck() 
-									self:SetPlaybackRate(1)
-									--self:SetCycle(0)
-								end
-							end
-							
+					if (self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
+						self.OldEnemy = self.Enemy
+						self.Ready = false
+						self.WasAttackingDoor = true
+						self:SetEnemy(nil)
+						local selanim = self:LookupSequence("jockey_melee")
+						local anim = self:GetSequenceActivity(selanim)
+						self.MeleeAttackDelay = CurTime() + 1.0
+						self:AddGesture(anim)
+						self.loco:ClearStuck() 
+						self.DontWannaUseSameSequence = false
+						self.loco:ClearStuck() 
+						self:SetPlaybackRate(1)
+						--self:SetCycle(0)
 					end
 				end
 			end
@@ -1224,97 +1129,115 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							self:EmitSound("HulkZombie.Attack")
-							local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+							local selanim = self:LookupSequence("jockey_melee")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 2.0
+							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
-							self:SetPoseParameter("move_x",0)
-							self:SetPoseParameter("move_y",0)
 							self.DontWannaUseSameSequence = false
 						end
 					end
+					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
+						self:SetPoseParameter("move_x",0)
+						self:SetPoseParameter("move_y",0)
+					end
 				end
+				--[[
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
-						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3) then
-							self:EmitSound("HulkZombie.Throw.Pickup")
-							local anim = self:SelectRandomSequence(self:GetSequenceActivity(self:LookupSequence("Throw_02")))
-							self.RangeAttackDelay = CurTime() + 6.0
-							self:PlaySequenceAndMove(anim)
-							self.loco:ClearStuck() 
-							self:SetPoseParameter("move_x",0)
-							self:SetPoseParameter("move_y",0)
-							self.DontWannaUseSameSequence = false
-											
-							timer.Simple(0.5, function()
-								local animent2 = ents.Create( 'base_gmodentity' ) -- The entity used for the death animation	
-								animent2:SetModel("models/props_debris/concrete_chunk01a.mdl") 
-								animent2:SetPos(self:GetAttachment(self:LookupAttachment("debris")).Pos)
-								animent2:SetAngles(self:GetAttachment(self:LookupAttachment("debris")).Ang)
-								animent2:Spawn()
-								animent2:Activate()
-								animent2:SetParent(self)
-								animent2:SetName("DebrisModel"..self:EntIndex())
-								animent2:Fire("SetParentAttachment","debris",0)
-								local owner = self
-								function animent2:Think()
-									if (IsValid(self)) then
-										self:SetPos(owner:GetAttachment(owner:LookupAttachment("debris")).Pos)
-										self:SetAngles(owner:GetAttachment(owner:LookupAttachment("debris")).Ang)
-									end
-									self:NextThink(CurTime())
-									return true
-								end
-							end)
-							timer.Simple(self:SequenceDuration(anim) - 0.2,function()	
-								for k,v in ipairs(ents.FindByName("DebrisModel"..self:EntIndex())) do
-									v:Remove()
-								end
-								if (self:IsOnGround() and self.Ready) then
-									if (self:GetEnemy() != nil) then
-										if (string.find(self:GetModel(),"mud")) then
+						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
+							local shouldvegoneforthehead = self:GetEnemy():EyePos()
+							local bone = 1
+							shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
+							local vel = ((shouldvegoneforthehead - self:EyePos()) * 8):Angle()
+							vel.p = vel.p
+							vel = vel:Forward() * (1800 * self:GetPos():Distance(self:GetEnemy():GetPos())) + Vector(0,0,120 + self:GetPos():Distance(self:GetEnemy():GetPos()))
 					
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-					
-										else
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+							self.Pouncing = true
+							self.loco:JumpAcrossGap(self:GetEnemy():GetPos(), vel)
+							timer.Create("WaitUntilIPouncedonMyEnemy"..self:EntIndex(), 0, 0, function()
+								if (self:IsOnGround() and !self.Pounced) then
+									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
+										if (v:EntIndex() == self:GetEnemy():EntIndex()) then
+											if (!self.Pounced) then
+
+												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
+													self:SetCollisionGroup(COLLISION_GROUP_NPC)
+												end
+												self:EmitSound("JockeyZombie.Ride")
+												local selanim = self:LookupSequence("jockey_ride")
+												local anim = self:GetSequenceActivity(selanim)
+												self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
+												self:PlaySequenceAndMove(selanim)
+												self:GetEnemy():SetMoveType(MOVETYPE_NONE)
+												if (self:GetEnemy():IsPlayer()) then
+													self:GetEnemy():StripWeapons()	
+												end
+												timer.Stop("jockeyPounce"..self:EntIndex())
+												timer.Stop("jockeyPounceShred"..self:EntIndex())
+												timer.Create("jockeyPounce"..self:EntIndex(), 1.0, 0, function()
+													local dmginfo = DamageInfo()
+													dmginfo:SetAttacker(self)
+													dmginfo:SetInflictor(self)
+													dmginfo:SetDamageType(DMG_SLASH)
+													dmginfo:SetDamage(6)
+													self:GetEnemy():TakeDamageInfo(dmginfo)
+													self:GetEnemy():EmitSound("PlayerZombie.AttackHit")
+												end)
+												self.loco:ClearStuck() 
+												self.DontWannaUseSameSequence = false
+												self.Pounced = true
+											end
+
 										end
-									else
-										--self:SetCycle(0)
-										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
-										self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
 									end
+									self.Pouncing = false
+									timer.Stop("WaitUntilIPouncedonMyEnemy"..self:EntIndex()) 
 								end
 							end)
+							if (self.Pounced) then
+
+								if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
+									self:SetCollisionGroup(COLLISION_GROUP_NPC)
+								end
+								local selanim = self:LookupSequence("jockey_ride")
+								local anim = self:GetSequenceActivity(selanim)
+								self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
+								self:PlaySequenceAndMove(selanim)
+								self:GetEnemy():SetMoveType(MOVETYPE_NONE)
+								if (self:GetEnemy():IsPlayer()) then
+									self:GetEnemy():StripWeapons()	
+								end
+								self.loco:ClearStuck() 
+								self.DontWannaUseSameSequence = false
+
+							end
 						end
 					end
-				end
+				end]]
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
 					self.loco:SetAcceleration(-270)
-				elseif (!self.ContinueRunning and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0 and !self.PlayingSequence3 and !self.PlayingSequence2) then
+				elseif (!self.ContinueRunning and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
 					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 						if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							self:EmitSound("HulkZombie.Attack")
-							local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+							local selanim = self:LookupSequence("jockey_melee")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 2.0
+							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetDesiredSpeed( 250 + (GetConVar("skill"):GetInt() * 35) )
+							self.loco:SetAcceleration(250 + (GetConVar("skill"):GetInt() * 35))
 						else
-							self.loco:SetDesiredSpeed(210)
+							self.loco:SetDesiredSpeed(250)
 							self.loco:SetAcceleration(300)
 						end
 					end
@@ -1327,7 +1250,6 @@ function ENT:Think()
 			self.PlayingSequence = false
 		end
 	end
-	self:SetPlaybackRate(1)
 	self:NextThink(CurTime())
 	return true
 end
@@ -1344,39 +1266,18 @@ function ENT:ChaseEnemy( options )
 	if (!IsValid(self:GetEnemy())) then return end
 	local options = options or {}
 	local path = Path( "Follow" )
-	path:SetMinLookAheadDistance( 210 )
+	path:SetMinLookAheadDistance( 300 )
 	path:SetGoalTolerance( 20 )
 	path:Compute( self, self:GetEnemy():GetPos() )		-- Compute the path towards the enemies position
 	
 	if ( !path:IsValid() ) then return "failed" end
 
 	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2) then 
-			if (!self.IsVersus) then
-				local mad = "rage_at_enemy_0"..table.Random({"1","2","3","4"})
-				self:PlaySequenceAndMove( mad ) 
-			end
-			if (!self.IsVersus) then
-				for k,v in ipairs(ents.FindByClass("npc_tank")) do
-					v.Music:Stop()
-				end
-				self.Music:PlayEx(1.0,100)
-				if (!self.MusicPlayed) then
-					self.MusicPlayed = true
-				end
-				timer.Simple(self:SequenceDuration(mad), function()
-						if (string.find(self:GetModel(),"mud")) then
-		
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-		
-						else
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
-						end
-				end)
-			end
-			self.EncounteredEnemy = true
+		self:EmitSound("jockeyZombie.Alert")
+		self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
-		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_4")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
+		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
 			if (self.loco:IsUsingLadder()) then
 				self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
 			else
@@ -1386,7 +1287,7 @@ function ENT:ChaseEnemy( options )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 					end
 				end
 			end
@@ -1394,14 +1295,14 @@ function ENT:ChaseEnemy( options )
 		local pos = self:GetEnemy():GetPos()
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do -- avoid other infected
-				if (v:GetClass() == "npc_tank" and v:EntIndex() != self:EntIndex()) then
+				if (v:GetClass() == "npc_jockey" and v:EntIndex() != self:EntIndex()) then
 					--pos = self:GetEnemy():GetPos() + (self:GetForward() + v:GetForward()*(-130)) + (v:GetRight() * -130 - self:GetRight()*(130))
 					self:SetCollisionGroup(COLLISION_GROUP_NPC)
 				end
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_tank")) then
+			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_jockey")) then
 				self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			else
 				self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1453,21 +1354,31 @@ function ENT:OnInjured( dmginfo )
 		end
 	end
 	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
-		self:EmitSound("HulkZombie.Pain")
+		if (dmginfo:IsDamageType(DMG_BURN)) then
+			self:EmitSound("jockeyZombie.Pain")
+		else
+			self:EmitSound("jockeyZombie.PainShort")
+		end
 		self.PainSoundTime = CurTime() + 0.7
-	elseif (self:Health() > 0 and dmginfo:IsDamageType(DMG_BURN) and self:Health() > 0 and (!self.PainSoundTime2 or CurTime() > self.PainSoundTime2)) then
-		self:EmitSound("HulkZombie.PainFire")
-		self.PainSoundTime2 = CurTime() + 10.0
 	end
 	if (dmginfo:GetAttacker() != nil and (dmginfo:GetAttacker():IsPlayer() || dmginfo:GetAttacker():IsNPC())) then 
 		if (self.Enemy != nil) then
 			self:SetEnemy(dmginfo:GetAttacker())
 		end
 	end
-	if ((math.random(1,50) == 1 || dmginfo:IsDamageType(DMG_BLAST)) and !self.PlayingSequence2 and !self.PlayingSequence) then
-		local selanim = table.Random({"Shoved_Backward","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+	if ((math.random(1,20) == 1 || dmginfo:IsDamageType(DMG_BLAST) || dmginfo:IsDamageType(DMG_CLUB))) then
+		local selanim = table.Random({"Shoved_Backward_01","Shoved_Backward_02","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+		if (self.Pounced) then
+			selanim = table.Random({"Melee_pounce_Knockoff_Backward","Melee_pounce_Knockoff_Forward","Melee_pounce_Knockoff_l","Melee_pounce_Knockoff_r"})
+			self.Pounced = false
+		end
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
+		if (self:GetEnemy():IsPlayer()) then
+			self:GetEnemy():SetMoveType(MOVETYPE_WALK)
+		else
+			self:GetEnemy():SetMoveType(MOVETYPE_STEP)
+		end 
 		timer.Stop("ShovedFinish"..self:EntIndex())
 		timer.Create("ShovedFinish"..self:EntIndex(), self:SequenceDuration(anim) - 0.2, 1,function()
 			if (self:IsOnGround() and self.Ready) then
@@ -1477,7 +1388,7 @@ function ENT:OnInjured( dmginfo )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_4"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 					end
 				else
 					--self:SetCycle(0)
@@ -1494,26 +1405,15 @@ function ENT:OnInjured( dmginfo )
 		dmginfo:ScaleDamage(0)
 		dmginfo:SetDamageType(DMG_GENERIC)
 	end
-	if (!self.flinchFinish) then
-		self:RestartGesture(self:GetSequenceActivity(self:LookupSequence("flinch_02")),true)
-		self.flinchFinish = true
-		timer.Create("FlinchFinished"..self:EntIndex(), self:SequenceDuration(self:LookupSequence("flinch_02")), 1, function()
-			self.flinchFinish = false
-		end)
-	end
 	if (dmginfo:IsDamageType(DMG_BULLET) and self:Health() > 0) then
 		if (math.random(1,6) == 1) then
-			self:EmitSound("HulkZombie.BulletImpact")
+			self:EmitSound("jockeyZombie.BulletImpact")
 		end
 	end
 	if (!dmginfo:IsDamageType(DMG_BURN)) then
-		if (dmginfo:IsDamageType(DMG_BLAST)) then
-			dmginfo:ScaleDamage(1.5)
-		else
-			dmginfo:ScaleDamage(3)
-		end
+		dmginfo:ScaleDamage(1.5)	
 	else
-		dmginfo:ScaleDamage(50)
+		dmginfo:ScaleDamage(1.5)
 	end
 end
 function ENT:Touch( entity )
@@ -1556,99 +1456,34 @@ function ENT:OnKilled( dmginfo )
 
 	local pos = self:GetPos()
 	self:PrecacheGibs()
-	if (self.WasShotInTheHead and !string.find(self:GetModel(),"ceda")) then
-		self:EmitSound("HulkZombie.HeadlessCough")
-		self:EmitSound("Blood.Spurt")
-		local headgib = ents.Create("prop_ragdoll")
-		headgib:SetModel("models/infected/limbs/limb_male_head01.mdl")
-		headgib:SetPos(self:GetAttachment(1).Pos)
-		headgib:SetAngles(self:GetAttachment(1).Ang)
-		headgib:Spawn()
-		headgib:Activate()
-		headgib:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-		if (IsValid(headgib:GetPhysicsObject())) then
-			headgib:GetPhysicsObject():AddVelocity(dmginfo:GetDamageForce() * 0.05)
-		end
-		timer.Simple(math.random(1,10),function()
-			if (IsValid(headgib)) then
-				headgib:Fire("FadeAndRemove","",0.01)
-			end
-		end)
-        local eyes = 1
-        ParticleEffectAttach("blood_decap", PATTACH_POINT_FOLLOW, self, eyes)
-        ParticleEffectAttach("blood_decap_arterial_spray", PATTACH_POINT_FOLLOW, self, eyes)
-        ParticleEffectAttach("blood_decap_fountain", PATTACH_POINT_FOLLOW, self, eyes)
-        ParticleEffectAttach("blood_decap_streaks", PATTACH_POINT_FOLLOW, self, eyes)
-		self:ManipulateBoneScale(self:LookupBone("ValveBiped.Bip01_Head1"),Vector(0,0,0))
-	else
-		self:EmitSound("HulkZombie.Die")
-	end
 	if SERVER then
-		
-		self.Ready = false
-		local death = table.Random(deathanimtbl)
-		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		if (string.find(self:GetModel(),"female") and !string.find(self:GetModel(),"formal") and !string.find(self:GetModel(),"_tshirt_skirt") and !string.find(self:GetModel(),"_tanktop_jeans")) then
-			death = table.Random(deathanimfemaletbl)
-			death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		elseif (dmginfo:IsDamageType(DMG_BUCKSHOT) && !string.find(self:GetModel(),"female") || string.find(self:GetModel(),"formal")) then
-			death = table.Random(deathbyshotgunanimtbl)
-			death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		end
-		if (!dmginfo:IsDamageType(DMG_BUCKSHOT) and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_4"))) then
-			if (string.find(self:GetModel(),"female") and !string.find(self:GetModel(),"formal") and !string.find(self:GetModel(),"_tshirt_skirt") and !string.find(self:GetModel(),"_tanktop_jeans")) then
-				death = table.Random(deathanimfemaletblrun)
-				death2 = self:GetSequenceActivity(self:LookupSequence(death))
+		if (IsValid(self.Enemy)) then
+			if (self:GetEnemy():IsPlayer()) then
+				self:GetEnemy():SetMoveType(MOVETYPE_WALK)
 			else
-				death = table.Random(deathanimtblrun)
-				death2 = self:GetSequenceActivity(self:LookupSequence(death))
-			end
-			self.ContinueRunning = true
-			--self.loco:SetDesiredSpeed(150)
-			--self.loco:SetAcceleration(500)
-		else
-			if (dmginfo:IsDamageType(DMG_BUCKSHOT)) then
-				self.ContinueRunning = true
-				--self.loco:SetDesiredSpeed(150)
-				--self.loco:SetAcceleration(500)
-			else
-				self.ContinueRunning = false
-				--self.loco:SetDesiredSpeed(0)
-				--self.loco:SetAcceleration(0)
+				self:GetEnemy():SetMoveType(MOVETYPE_STEP)
 			end
 		end
 		self.Ready = false
-		self:PlaySequenceAndMove(self:LookupSequence(death))
-			timer.Stop("Dying"..self:EntIndex())
-			timer.Create("Dying"..self:EntIndex(), 0.2, 0, function()
-				if (IsValid(self) and !self.PlayingSequence2) then
+				if (IsValid(self)) then
 					self:EmitSound("PlayerZombie.Die")
+					self:EmitSound("jockeyZombie.Death")
+						
 					self:BecomeRagdoll(dmginfo)
-					if (self.Music) then
-						self.Music:Stop()
-					end
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
-			end)
-		--self:BecomeRagdoll(dmginfo)
 	end
 end
-
+ 
 if CLIENT then
 
 	function ENT:Draw()
 		if (LocalPlayer():GetPos():Distance(self:GetPos()) < 3200) then
 			self:DrawModel()
 		end
-	end
-
-end
-list.Set( "NPC", "tank", {
-	Name = "The Tank",
-	Class = "npc_tank",
+	end 
+end 
+list.Set( "NPC", "jockey", {
+	Name = "The Jockey",
+	Class = "npc_jockey",
 	Category = "Left 4 Dead 2"
 })

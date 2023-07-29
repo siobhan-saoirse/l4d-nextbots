@@ -20,7 +20,7 @@ end
 local function lookForNextPlayer(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
-		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 1175 )) do
+		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 120000 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
@@ -29,7 +29,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_boomer"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -118,7 +118,7 @@ local modeltbl = {
 
 hook.Add("EntityEmitSound","BoomerHearSound",function(snd)
 	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/boom") and string.find(snd.SoundName, "step") then
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetModel(), "models/infected/boom") || string.StartWith(snd.Entity:GetModel(), "models/infected/jockey"))  and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
@@ -405,13 +405,13 @@ function ENT:Initialize()
 
 		end)
 	end	
-	--[[timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
+	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
-		if (!GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound(table.Random({"BoomerZombie.Voice"}))
+		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
+			self:EmitSound("BoomerZombie.Voice")
 		end
 
-	end)]]-- BROKEN, DEFINE THE TABLE FIRST
+	end)
 end
 
 function ENT:HandleStuck()
@@ -976,7 +976,7 @@ function ENT:Think()
 						end
 					end
 				self:TakeDamage(self.FallDamage,self,self)
-				self:EmitSound("PlayerZombie.Thud")
+				self:EmitSound("PlayerZombie.JumpLand")
 				self.HaventLandedYet = false
 			end
 		end
@@ -1451,11 +1451,6 @@ function ENT:OnKilled( dmginfo )
 					ParticleEffectAttach("boomer_explode", PATTACH_POINT_FOLLOW, self, 1 )
 					self:SetModel("models/infected/limbs/exploded_boomer.mdl")
 					self:BecomeRagdoll(dmginfo)
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
 	end
 end

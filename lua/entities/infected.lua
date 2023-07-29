@@ -861,7 +861,7 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,4), 0, function()
 	
 		if (self.Ready) then 
-			if (!GetConVar("ai_disabled"):GetBool()) then
+			if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
 				if (IsValid(self:GetEnemy())) then
 						if (!self.PlayingSequence) then
 							self:EmitSound(table.Random(
@@ -1301,92 +1301,15 @@ local tracedata = {
 	output = traceres,
 }
 
-hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
-	--[[
-	if (!dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_DIRECT) and ent:IsTFPlayer()) then
+hook.Add("EntityTakeDamage","L4D2BloodSplatterDamageNew",function(ent,dmginfo)
+	if (!dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_DIRECT) and (ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot())) then
 		sound.Play( "player/survivor/splat/zombie_blood_spray_0"..math.random(1,6)..".wav", dmginfo:GetDamagePosition(), 55, math.random(95,105),0.3)
 		for i=1,5 do
 			timer.Simple(math.Rand(0.1,0.4), function() 
 				sound.Play( "player/survivor/splat/zombie_blood_spray_0"..math.random(1,6)..".wav", dmginfo:GetDamagePosition(), 55, math.random(95,105),0.3)
 			end)
 		end
-		
-		local vec, tracedata, traceres = vec, tracedata, traceres
-
-		tracedata.start = dmginfo:GetDamagePosition()
-		tracedata.filter = ent
-
-		local noise, count
-
-		if dmg == 0 then
-			noise, count = 0.1, 1
-		elseif dmg == 1 then
-			noise, count = 0.2, 2
-		else
-			noise, count = 0.3, 4
-		end
-
-		::loop::
-
-		for i = 1, 3 do
-			vec[i] = dmginfo:GetDamagePosition()[i] + (math.Rand(-noise, noise)) * 172
-		end
-
-		util.TraceLine(tracedata)
-
-		if traceres.Hit then
-			util.Decal("Blood", dmginfo:GetDamagePosition(), vec, ent)
-		end
-
-		if count > 1 then
-			count = count - 1
-	
-			goto loop
-		end
-	elseif (!dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_DIRECT) and ent:GetClass() == "prop_ragdoll") then
-		sound.Play( "player/survivor/splat/zombie_blood_spray_0"..math.random(1,6)..".wav", dmginfo:GetDamagePosition(), 55, math.random(95,105),0.3)
-		local effectdata = EffectData()
-		effectdata:SetOrigin( dmginfo:GetDamagePosition() )
-		util.Effect( "BloodImpact", effectdata )
-		for i=1,5 do
-			timer.Simple(math.Rand(0.1,0.4), function()
-				sound.Play( "player/survivor/splat/zombie_blood_spray_0"..math.random(1,6)..".wav", dmginfo:GetDamagePosition(), 55, math.random(95,105),0.3)
-			end)
-		end
-		
-		local vec, tracedata, traceres = vec, tracedata, traceres
-
-		tracedata.start = dmginfo:GetDamagePosition()
-		tracedata.filter = ent
-
-		local noise, count
-
-		if dmg == 0 then
-			noise, count = 0.1, 1
-		elseif dmg == 1 then
-			noise, count = 0.2, 2
-		else
-			noise, count = 0.3, 4
-		end
-
-		::loop::
-
-		for i = 1, 3 do
-			vec[i] = dmginfo:GetDamagePosition()[i] + (math.Rand(-noise, noise)) * 172
-		end
-
-		util.TraceLine(tracedata)
-
-		if traceres.Hit then
-			util.Decal("Blood", dmginfo:GetDamagePosition(), vec, ent)
-		end
-
-		if count > 1 then
-			count = count - 1
-	
-			goto loop
-		end
-	end]]
+	end
 
 end)
 
@@ -2317,8 +2240,8 @@ function ENT:OnKilled( dmginfo )
 		end
 		self.Ready = false
 		self:PlaySequenceAndMove(self:LookupSequence(death))
-		if (!dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_CRUSH) and !dmginfo:IsDamageType(DMG_CLUB) and !dmginfo:IsDamageType(DMG_DROWN) and !dmginfo:IsDamageType(DMG_SLASH)) then
-			timer.Create("Dying"..self:EntIndex(), 0, 0, function()
+		if (math.random(1,8) == 1 and !dmginfo:IsDamageType(DMG_BLAST) and !dmginfo:IsDamageType(DMG_BURN) and !dmginfo:IsDamageType(DMG_CRUSH) and !dmginfo:IsDamageType(DMG_CLUB) and !dmginfo:IsDamageType(DMG_DROWN) and !dmginfo:IsDamageType(DMG_SLASH)) then
+			timer.Create("Dying"..self:EntIndex(), 0.2, 0, function()
 				if (IsValid(self) and !self.PlayingSequence2) then
 					self:BecomeRagdoll(dmginfo)
 				end	
@@ -2326,7 +2249,6 @@ function ENT:OnKilled( dmginfo )
 		else
 			if (IsValid(self)) then
 				self:BecomeRagdoll(dmginfo)
-				--becomeragdoll already removes self, POSSIBLE crash fix?
 			end
 		end		
 		--self:BecomeRagdoll(dmginfo)
