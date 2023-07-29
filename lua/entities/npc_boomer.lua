@@ -1451,11 +1451,6 @@ function ENT:OnKilled( dmginfo )
 					ParticleEffectAttach("boomer_explode", PATTACH_POINT_FOLLOW, self, 1 )
 					self:SetModel("models/infected/limbs/exploded_boomer.mdl")
 					self:BecomeRagdoll(dmginfo)
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
 	end
 end
