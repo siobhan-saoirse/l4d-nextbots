@@ -44,7 +44,7 @@ local function nearestNPC(ply)
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 500 )) do
 			if (v:IsNPC() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex()) then
-				if (v:Health() > 1) then
+				if (v:Health() > 0) then
 					table.insert(npcs, v)
 				end
 			end
@@ -1593,6 +1593,9 @@ function ENT:Think()
 			self.Idling = true
 		end
 		if (!GetConVar("ai_disabled"):GetBool() and self.Ready) then
+						if (table.Count(getAllInfected()) >= 30) then -- now thats 30
+							self:Remove()
+						end
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (GAMEMODE:EntityTeam(self.Enemy) == TEAM_GREEN and !(self.Enemy:HasPlayerState(PLAYERSTATE_JARATED) and self.Enemy:HasPlayerState(PLAYERSTATE_PUKEDON))) then 
 					self.Enemy = nil
