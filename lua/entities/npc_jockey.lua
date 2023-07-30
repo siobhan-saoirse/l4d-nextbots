@@ -2,7 +2,7 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_jockey", "jockey")
+	language.Add("npc_jockey", "Jockey")
 end
 local function getAllInfected()
 	local npcs = {}

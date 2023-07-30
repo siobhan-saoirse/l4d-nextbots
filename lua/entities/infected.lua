@@ -1687,7 +1687,7 @@ function ENT:Think()
 					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
-								self:SetCollisionGroup(COLLISION_GROUP_NPC)
+								--self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
 							if (!string.find(self:GetModel(),"mud")) then
 								local anim
@@ -1864,7 +1864,7 @@ function ENT:ChaseEnemy( options )
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do -- avoid other infected
 				if (v:GetClass() == "infected" and v:EntIndex() != self:EntIndex()) then
 					--pos = self:GetEnemy():GetPos() + (self:GetForward() + v:GetForward()*(-130)) + (v:GetRight() * -130 - self:GetRight()*(130))
-					self:SetCollisionGroup(COLLISION_GROUP_NPC)
+					self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 				end
 			end
 		end

@@ -2,7 +2,7 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_spitter", "spitter")
+	language.Add("npc_spitter", "Spitter")
 end
 local function getAllInfected()
 	local npcs = {}
@@ -330,9 +330,19 @@ end
 function ENT:Initialize()
 
 	game.AddParticles( "particles/spitter_fx.pcf" )
-	
-	local rnd = table.Random(modeltbl)
-	self:SetModel( rnd )
+	if SERVER then
+		if (!self.DontReplaceModel) then
+			local rnd = table.Random(modeltbl)
+			self:SetModel( rnd )
+			if (string.find(rnd,"_male")) then
+				self.gender = "male"
+			elseif (string.find(rnd,"_female")) then
+				self.gender = "female"
+			else
+				self.gender = "male"
+			end
+		end
+	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
 	self:SetHealth(100) 

@@ -2,7 +2,7 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_charger", "charger")
+	language.Add("npc_charger", "Charger")
 end
 local function getAllInfected()
 	local npcs = {}
@@ -685,11 +685,11 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
 					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
 						self.loco:ClearStuck() 
-						self:EmitSound(
+						v:EmitSound(
 							"ChargerZombie.Smash",
 							85, 100
 						)
-						self:EmitSound(
+						v:EmitSound(
 							"ChargerZombie.Smash",
 							85, 100
 						)

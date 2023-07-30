@@ -509,7 +509,7 @@ function ENT:RunBehaviour()
 		self.loco:SetDesiredSpeed( 1400 )		-- Walk speed
 		rnd = 40
 		if (!dinfected:GetBool()) then
-			rnd = 60
+			rnd = 55
 		end
 			if (math.random(1,rnd) == 1) then 
 				if (table.Count(self.bots) < 4) then 
