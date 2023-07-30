@@ -1331,11 +1331,11 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) / self:GetModelScale() )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale() )
+							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale())
 						else
-							self.loco:SetDesiredSpeed(210 / self:GetModelScale())
-							self.loco:SetAcceleration(500)
+							self.loco:SetDesiredSpeed(210 * self:GetModelScale())
+							self.loco:SetAcceleration(500 * self:GetModelScale())
 						end
 					end
 				end

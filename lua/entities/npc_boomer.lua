@@ -268,6 +268,21 @@ function ENT:PlaySequenceAndMove(seq, options, callback)
 	return res
 end
 
+function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
+	if not isstring(yaw) then
+		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
+	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
+	if isvector(pos) then
+		center = center or self:WorldSpaceCenter()
+		local angle = (pos - center):Angle()
+		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
+		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
+	else
+		self:SetPoseParameter(pitch, 0)
+		self:SetPoseParameter(yaw, 0)
+	end
+end
+
 function ENT:TraceHull(vec,data)
 
 	if not isvector(vec) then vec = Vector(0, 0, 0) end
@@ -806,20 +821,6 @@ hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
 
 end)
 
-function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
-	if not isstring(yaw) then
-		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
-	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
-	if isvector(pos) then
-		center = center or self:WorldSpaceCenter()
-		local angle = (pos - center):Angle()
-		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
-		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
-	else
-		self:SetPoseParameter(pitch, 0)
-		self:SetPoseParameter(yaw, 0)
-	end
-end
 ----------------------------------------------------
 -- ENT:RunBehaviour()
 -- This is where the meat of our AI is
@@ -858,8 +859,8 @@ function ENT:RunBehaviour()
 					else
 						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
 							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) ) 
+							self.Walking = false
 						end
-						self.Walking = false
 					end
 				end
 			end
@@ -901,7 +902,7 @@ function ENT:BodyUpdate()
 	-- This helper function does a lot of useful stuff for us.
 	-- It sets the bot's move_x move_y pose parameters, sets their animation speed relative to the ground speed, and calls FrameAdvance.
 	-- 
-	if (self:IsOnGround() and (IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
+	if (self:IsOnGround() and (IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0 and !self.Walking) then
 		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3) then
 			self:BodyMoveXY()
 			-- BodyMoveXY() already calls FrameAdvance, calling it twice will affect animation playback, specifically on layers
@@ -1231,11 +1232,11 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 175 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetDesiredSpeed( 175 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale() )
+							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale())
 						else
-							self.loco:SetDesiredSpeed(175)
-							self.loco:SetAcceleration(500)
+							self.loco:SetDesiredSpeed(175 * self:GetModelScale())
+							self.loco:SetAcceleration(500 * self:GetModelScale())
 						end
 					end
 				end
