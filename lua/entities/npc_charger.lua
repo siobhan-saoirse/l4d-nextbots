@@ -1142,7 +1142,7 @@ function ENT:Think()
 						self:SetEnemy(nil)
 						local selanim = self:LookupSequence("charger_punch")
 						local anim = self:GetSequenceActivity(selanim)
-						self.MeleeAttackDelay = CurTime() + 1.0
+						self.MeleeAttackDelay = CurTime() + 1.1
 						self:AddGesture(anim)
 						self.loco:ClearStuck() 
 						self.DontWannaUseSameSequence = false
@@ -1161,7 +1161,7 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 0.1
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 						end
@@ -1256,7 +1256,7 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 0.1
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 						end
