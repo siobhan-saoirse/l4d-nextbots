@@ -362,7 +362,11 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
-	self:SetHealth(4000) 
+	if (self.IsVersus) then
+		self:SetHealth(6000) 
+	else
+		self:SetHealth(4000) 
+	end
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -1311,11 +1315,11 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
+							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) / self:GetModelScale() )
 							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
 						else
-							self.loco:SetDesiredSpeed(210)
-							self.loco:SetAcceleration(300)
+							self.loco:SetDesiredSpeed(210 / self:GetModelScale())
+							self.loco:SetAcceleration(500)
 						end
 					end
 				end

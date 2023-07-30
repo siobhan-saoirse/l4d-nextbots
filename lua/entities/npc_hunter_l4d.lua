@@ -5,7 +5,7 @@ if CLIENT then
 	language.Add("npc_hunter_l4d", "Hunter")
 end 
 local function getAllInfected()
-	local npcs = {}
+	local npcs = {} 
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
 			if (v:GetClass() == "npc_hunter_l4d") then
@@ -1284,10 +1284,10 @@ function ENT:Think()
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
 							self.loco:SetDesiredSpeed( 300 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
 						else
 							self.loco:SetDesiredSpeed(300)
-							self.loco:SetAcceleration(300)
+							self.loco:SetAcceleration(500)
 						end
 					end
 				end

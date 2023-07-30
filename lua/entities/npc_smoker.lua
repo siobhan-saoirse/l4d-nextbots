@@ -2,13 +2,13 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_boomer", "Boomer")
+	language.Add("npc_smoker", "smoker")
 end
 local function getAllInfected()
 	local npcs = {}
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
-			if (v:GetClass() == "npc_boomer") then
+			if (v:GetClass() == "npc_smoker") then
 				if (v:Health() > 1) then
 					table.insert(npcs, v)
 				end
@@ -29,7 +29,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_smoker"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -75,50 +75,31 @@ ENT.Type			= "nextbot"
 ENT.Name			= "Tank"
 ENT.Spawnable		= false
 ENT.AttackDelay = 50
-ENT.AttackDamage = 4
+ENT.AttackDamage = 6
 ENT.AttackRange = 65
 ENT.AttackRange2 = 120
-ENT.RangedAttackRange = 200
+ENT.RangedAttackRange = 1800
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
 ENT.Walking = false
 ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
 local modeltbl = {
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomer_l4d1.mdl",
-	"models/infected/boomette.mdl",
-	"models/infected/boomette.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker.mdl",
+	"models/infected/smoker_l4d1.mdl",
+	"models/infected/smoker_l4d1.mdl",
+	"models/infected/smoker_l4d1.mdl",
 }
 
-hook.Add("EntityEmitSound","BoomerHearSound",function(snd)
+hook.Add("EntityEmitSound","smokerHearSound",function(snd)
 	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetModel(), "models/infected/boom") || string.StartWith(snd.Entity:GetModel(), "models/infected/jockey"))  and string.find(snd.SoundName, "step") then
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/boom") and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
@@ -127,13 +108,13 @@ hook.Add("EntityEmitSound","BoomerHearSound",function(snd)
 			snd.SoundName = string.Replace(snd.SoundName, "snow6", "snow2")
 			snd.Channel = CHAN_BODY
 			local speed = snd.Entity:GetVelocity():Length()
-			local groundspeed = snd.Entity:GetVelocity():Length2DSqr()
+			local groundspeed = snd.Entity:GetVelocity():Length2DSqr() 
 			snd.Volume = 1
 			--[[
 	if (IsMounted("left4dead") or IsMounted("left4dead2")) then 
 				local pos = snd.Entity:GetPos()
 				if (snd.Pos) then
-					pos = snd.Pos
+					pos = snd.Pos 
 				end
 				if (snd.Channel == CHAN_BODY) then
 					if (math.random(1,6) != 1) then
@@ -144,18 +125,18 @@ hook.Add("EntityEmitSound","BoomerHearSound",function(snd)
 			end]]
 				
 			if (snd.Entity:WaterLevel() < 1) then  
-				snd.SoundName = string.Replace(snd.SoundName, "player/footsteps/", "player/footsteps/boomer/run/")
+				snd.SoundName = string.Replace(snd.SoundName, "player/footsteps/", "player/footsteps/infected/run/")
 				snd.Volume = 1
 			elseif (snd.Entity:WaterLevel() < 2) then
-				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/boomer/run/wade"..math.random(1,4)..".wav")
+				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
 				snd.Volume = 1
 			else
-				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/boomer/run/wade"..math.random(1,4)..".wav")
+				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
 				snd.Volume = 1
 			end
 			snd.Pitch = math.random(95,105)
 			return true
-		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"female") and string.find(snd.Entity:GetModel(),"boomer") then
+		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"female") and string.find(snd.Entity:GetModel(),"smoker") then
 			snd.SoundName = string.Replace(snd.SoundName, "female", "male")
 			
 			return true
@@ -165,7 +146,7 @@ hook.Add("EntityEmitSound","BoomerHearSound",function(snd)
 			return true
 		elseif ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
 			for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
-				if (v:GetClass() == "npc_boomer" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
+				if (v:GetClass() == "npc_smoker" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
 					v:SetEnemy(snd.Entity)
 				end
 			end
@@ -223,7 +204,7 @@ function ENT:CanSee(ply, fov)
 end
 
 function ENT:Shove(anim)
-	self:EmitSound("BoomerZombie.Shoved")
+	self:EmitSound("smokerZombie.Shoved")
 end
 
 -- these 6 funcs are not mine, by dragoteryx
@@ -341,7 +322,7 @@ end
 
 function ENT:Initialize()
 
-	game.AddParticles( "particles/boomer_fx.pcf" )
+	game.AddParticles( "particles/smoker_fx.pcf" )
 	if SERVER then
 		if (!self.DontReplaceModel) then
 			local rnd = table.Random(modeltbl)
@@ -357,7 +338,7 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
-	self:SetHealth(50) 
+	self:SetHealth(250) 
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -369,12 +350,12 @@ function ENT:Initialize()
 		end]]
 		self:SetTrigger(true)
 		self:SetFOV(54)
-		self:SetBloodColor(BLOOD_COLOR_RED)
+		self:SetBloodColor(BLOOD_COLOR_YELLOW)
 		self:SetCollisionGroup(COLLISION_GROUP_NPC)
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
 		self:SetSkin(math.random(0,self:SkinCount()-1))
-		self:EmitSound("BoomerZombie.Gurgle")
+		self:EmitSound("smokerZombie.Gurgle")
 		for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
 			if (IsValid(v)) then
 				if (table.Count(getAllInfected()) > 30) then
@@ -408,7 +389,15 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound("BoomerZombie.Voice")
+			local voice = {
+				"SmokerZombie.Voice",
+				"SmokerZombie.Breathe",
+				"SmokerZombie.Breathe",
+				"SmokerZombie.Breathe",
+				"SmokerZombie.Breathe",
+				"SmokerZombie.Breathe"
+			}
+			self:EmitSound(table.Random(voice))
 		end
 
 	end)
@@ -435,7 +424,7 @@ end
 
 function ENT:OnRemove()
 	if SERVER then
-		self:StopSound("BoomerZombie.Gurgle")
+		self:StopSound("smokerZombie.Gurgle")
 	end
 	timer.Stop("IdleExpression"..self:EntIndex())
 	timer.Stop("AngryExpression"..self:EntIndex())
@@ -450,6 +439,10 @@ end
 function ENT:SetEnemy(ent)
 	if (ent != nil and ent:IsNextBot()) then return end
 	self.Enemy = ent
+	self.Pounced = false
+	self:StopSound("smokerZombie.Ride")
+	timer.Stop("smokerPounce"..self:EntIndex())
+	timer.Stop("smokerPounceShred"..self:EntIndex())
 	if (ent != nil) then
 		self.Idling = false
 	end
@@ -532,7 +525,7 @@ function ENT:FindEnemy()
 				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsFriendly(self) and GAMEMODE:EntityTeam(v) != TEAM_SPECTATOR and GAMEMODE:EntityTeam(v) != TEAM_FRIENDLY and v:Health() > 1 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("BoomerZombie.RageAtVictim")
+					--self:EmitSound("smokerZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -571,10 +564,10 @@ function ENT:FindEnemy()
 				end
 			else
 
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_boomer"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_smoker"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("BoomerZombie.RageAtVictim")
+					--self:EmitSound("smokerZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -630,7 +623,7 @@ local function OpenLinkedAreaPortal(ent)
 	end
 end
 function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
-	if (event == 3001 and !self.PlayingSequence3) then
+	if (event == 3001) then
 		if (IsValid(self.Door)) then
 
 			self.loco:ClearStuck() 
@@ -806,6 +799,76 @@ hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
 
 end)
 
+hook.Add("ScaleNPCDamage","smokerDamage",function(npc,hitgroup,dmginfo)
+	
+	if (npc:GetClass() == "npc_smoker") then	
+		if (hitgroup == HITGROUP_HEAD) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_head")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+			dmginfo:ScaleDamage(3)
+		elseif (hitgroup == HITGROUP_CHEST) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_chest")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_STOMACH) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_stomach")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_LEFTLEG) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_leftleg")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_RIGHTLEG) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_rightleg")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end) 
+			end
+		elseif (hitgroup == HITGROUP_LEFTARM) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_left")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		elseif (hitgroup == HITGROUP_RIGHTARM) then
+			
+			if (!npc.flinchFinish) then 
+				npc:RestartGesture(npc:GetSequenceActivity(npc:LookupSequence("Flinch_right")),true)
+				npc.flinchFinish = true
+				timer.Create("FlinchFinished"..npc:EntIndex(), npc:SequenceDuration(npc:LookupSequence("Flinch_chest")), 1, function()
+					npc.flinchFinish = false
+				end)
+			end
+		end
+	end
+end)
 ----------------------------------------------------
 -- ENT:RunBehaviour()
 -- This is where the meat of our AI is
@@ -838,7 +901,7 @@ function ENT:RunBehaviour()
 					if (math.random(1,800) == 1) then
 						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
 						self:StartActivity( act )
-						self.loco:SetDesiredSpeed( 175 * 0.5 )
+						self.loco:SetDesiredSpeed( 300 * 0.5 )
 						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
@@ -888,7 +951,7 @@ function ENT:BodyUpdate()
 	-- It sets the bot's move_x move_y pose parameters, sets their animation speed relative to the ground speed, and calls FrameAdvance.
 	-- 
 	if (self:IsOnGround() and (IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
-		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3) then
+		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3 || self.Pouncing) then
 			self:BodyMoveXY()
 			-- BodyMoveXY() already calls FrameAdvance, calling it twice will affect animation playback, specifically on layers
 			return
@@ -946,13 +1009,12 @@ function ENT:Think()
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
 				self:ResetSequence("jump")
-				self:EmitSound("BoomerZombie.Fall")
+				self:EmitSound("smokerZombie.Fall")
 				self.FallDamage = 10;
-				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.2, 0, function()
+				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.8, 0, function()
 					if (!self:IsOnGround()) then
 
-						self:EmitSound("BoomerZombie.Fall")
-						self.FallDamage = self.FallDamage + 4
+						self:EmitSound("smokerZombie.Pounce.FlyLoop")
 
 					end
 				end)
@@ -960,7 +1022,7 @@ function ENT:Think()
 			end
 		else
 			if (self.HaventLandedYet) then
-				self:AddGestureSequence(self:LookupSequence("flinch_01"))
+				self:AddGestureSequence(self:LookupSequence("Flinch_chest"))
 					if (self:IsOnGround()) then
 						if (self:GetEnemy() != nil) then
 							if (string.find(self:GetModel(),"mud")) then
@@ -975,8 +1037,11 @@ function ENT:Think()
 							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  )
 						end
 					end
-				self:TakeDamage(self.FallDamage,self,self)
-				self:EmitSound("PlayerZombie.JumpLand")
+				if (self.Pouncing) then
+					self:EmitSound("smokerZombie.Pounce.Miss")
+				else
+					self:EmitSound("PlayerZombie.JumpLand")
+				end
 				self.HaventLandedYet = false
 			end
 		end
@@ -1081,9 +1146,6 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							if (math.random(1,6) == 1) then
-								self:EmitSound("BoomerZombie.Attack")
-							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 1.0
@@ -1097,71 +1159,80 @@ function ENT:Think()
 						self:SetPoseParameter("move_y",0)
 					end
 				end
+				--[[
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
-							self:EmitSound("Vomit.Use")
-									
-							for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-								if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
-									self.loco:ClearStuck() 
-									local dmginfo = DamageInfo()
-									dmginfo:SetAttacker(self)
-									dmginfo:SetInflictor(self)
-									dmginfo:SetDamageType(bit.bor(DMG_ACID,DMG_POISON))
-									dmginfo:SetDamage(20)
-									if (GetConVar("skill"):GetInt() > 1) then
-										dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
-									end
-									v:TakeDamageInfo(dmginfo) 
-									v.AttractedToInfected = true
-									timer.Simple(15, function()
-										if (IsValid(v)) then
-											v.AttractedToInfected = true
-											if (v:IsPlayer()) then
-												v:SendLua("DrawMaterialOverlay( '', -0.06 )")
+							local shouldvegoneforthehead = self:GetEnemy():EyePos()
+							local bone = 1
+							shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
+							local vel = ((shouldvegoneforthehead - self:EyePos()) * 8):Angle()
+							vel.p = vel.p
+							vel = vel:Forward() * (1800 * self:GetPos():Distance(self:GetEnemy():GetPos())) + Vector(0,0,120 + self:GetPos():Distance(self:GetEnemy():GetPos()))
+					
+							self.Pouncing = true
+							self.loco:JumpAcrossGap(self:GetEnemy():GetPos(), vel)
+							timer.Create("WaitUntilIPouncedonMyEnemy"..self:EntIndex(), 0, 0, function()
+								if (self:IsOnGround() and !self.Pounced) then
+									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
+										if (v:EntIndex() == self:GetEnemy():EntIndex()) then
+											if (!self.Pounced) then
+
+												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
+													self:SetCollisionGroup(COLLISION_GROUP_NPC)
+												end
+												self:EmitSound("smokerZombie.Ride")
+												local selanim = self:LookupSequence("smoker_ride")
+												local anim = self:GetSequenceActivity(selanim)
+												self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
+												self:PlaySequenceAndMove(selanim)
+												self:GetEnemy():SetMoveType(MOVETYPE_NONE)
+												if (self:GetEnemy():IsPlayer()) then
+													self:GetEnemy():StripWeapons()	
+												end
+												timer.Stop("smokerPounce"..self:EntIndex())
+												timer.Stop("smokerPounceShred"..self:EntIndex())
+												timer.Create("smokerPounce"..self:EntIndex(), 1.0, 0, function()
+													local dmginfo = DamageInfo()
+													dmginfo:SetAttacker(self)
+													dmginfo:SetInflictor(self)
+													dmginfo:SetDamageType(DMG_SLASH)
+													dmginfo:SetDamage(6)
+													self:GetEnemy():TakeDamageInfo(dmginfo)
+													self:GetEnemy():EmitSound("PlayerZombie.AttackHit")
+												end)
+												self.loco:ClearStuck() 
+												self.DontWannaUseSameSequence = false
+												self.Pounced = true
 											end
-										end
-									end)
-									if (v:IsPlayer()) then
-										v:SendLua("LocalPlayer():EmitSound('Event.VomitInTheFace')")
-										if (v:IsPlayer()) then
-											v:SendLua("DrawMaterialOverlay( 'models/shadertest/shader4', -0.06 )")
+
 										end
 									end
-								end
-							end
-							ParticleEffectAttach("boomer_vomit_b", PATTACH_POINT_FOLLOW, self, 1 )
-							local anim = self:SelectRandomSequence(self:GetSequenceActivity(self:LookupSequence("Vomit_Attack")))
-							self.RangeAttackDelay = CurTime() + 60.0
-							self:AddGestureSequence(anim)
-							self.loco:ClearStuck() 
-							self:SetPoseParameter("move_x",0)
-							self:SetPoseParameter("move_y",0)
-							self.PlayingSequence3 = true
-											
-							timer.Simple(self:SequenceDuration(anim) - 0.2,function()	
-								self.PlayingSequence3 = false
-								if (self:IsOnGround() and self.Ready) then
-									if (self:GetEnemy() != nil) then
-										if (string.find(self:GetModel(),"mud")) then
-					
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-					
-										else
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
-										end
-									else
-										--self:SetCycle(0)
-										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
-										self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
-									end
+									self.Pouncing = false
+									timer.Stop("WaitUntilIPouncedonMyEnemy"..self:EntIndex()) 
 								end
 							end)
-						end 
+							if (self.Pounced) then
+
+								if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
+									self:SetCollisionGroup(COLLISION_GROUP_NPC)
+								end
+								local selanim = self:LookupSequence("smoker_ride")
+								local anim = self:GetSequenceActivity(selanim)
+								self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
+								self:PlaySequenceAndMove(selanim)
+								self:GetEnemy():SetMoveType(MOVETYPE_NONE)
+								if (self:GetEnemy():IsPlayer()) then
+									self:GetEnemy():StripWeapons()	
+								end
+								self.loco:ClearStuck() 
+								self.DontWannaUseSameSequence = false
+
+							end
+						end
 					end
-				end
+				end]]
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
 					self.loco:SetAcceleration(-270)
@@ -1170,9 +1241,6 @@ function ENT:Think()
 						if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
-							end
-							if (math.random(1,6) == 1) then
-								self:EmitSound("BoomerZombie.Attack")
 							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
@@ -1183,10 +1251,10 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 175 + (GetConVar("skill"):GetInt() * 35) )
+							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
 							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
 						else
-							self.loco:SetDesiredSpeed(175)
+							self.loco:SetDesiredSpeed(210)
 							self.loco:SetAcceleration(500)
 						end
 					end
@@ -1215,14 +1283,25 @@ function ENT:ChaseEnemy( options )
 	if (!IsValid(self:GetEnemy())) then return end
 	local options = options or {}
 	local path = Path( "Follow" )
-	path:SetMinLookAheadDistance( 175 )
+	path:SetMinLookAheadDistance( 300 )
 	path:SetGoalTolerance( 20 )
 	path:Compute( self, self:GetEnemy():GetPos() )		-- Compute the path towards the enemies position
 	
 	if ( !path:IsValid() ) then return "failed" end
 
 	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2) then 
-		self:EmitSound("BoomerZombie.Rage")
+		local alert = {
+			"SmokerZombie.Alert",
+			"SmokerZombie.Alert",
+			"SmokerZombie.Alert",
+			"SmokerZombie.Voice",
+			"SmokerZombie.Voice",
+			"SmokerZombie.Voice",
+			"SmokerZombie.Voice",
+			"SmokerZombie.Recognize",
+			"SmokerZombie.Recognize",
+		}
+		self:EmitSound(table.Random(alert))
 		self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
@@ -1244,14 +1323,14 @@ function ENT:ChaseEnemy( options )
 		local pos = self:GetEnemy():GetPos()
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do -- avoid other infected
-				if (v:GetClass() == "npc_boomer" and v:EntIndex() != self:EntIndex()) then
+				if (v:GetClass() == "npc_smoker" and v:EntIndex() != self:EntIndex()) then
 					--pos = self:GetEnemy():GetPos() + (self:GetForward() + v:GetForward()*(-130)) + (v:GetRight() * -130 - self:GetRight()*(130))
 					self:SetCollisionGroup(COLLISION_GROUP_NPC)
 				end
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_boomer")) then
+			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_smoker")) then
 				self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			else
 				self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1303,10 +1382,10 @@ function ENT:OnInjured( dmginfo )
 		end
 	end
 	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
-		if (dmginfo:IsDamageType(DMG_BURN) || dmginfo:IsDamageType(DMG_CLUB)) then
-			self:EmitSound("BoomerZombie.Pain")
+		if (dmginfo:IsDamageType(DMG_BURN)) then
+			self:EmitSound("smokerZombie.Pain")
 		else
-			self:EmitSound("BoomerZombie.PainShort")
+			self:EmitSound("smokerZombie.PainShort")
 		end
 		self.PainSoundTime = CurTime() + 0.7
 	end
@@ -1315,10 +1394,19 @@ function ENT:OnInjured( dmginfo )
 			self:SetEnemy(dmginfo:GetAttacker())
 		end
 	end
-	if ((math.random(1,20) == 1 || dmginfo:IsDamageType(DMG_BLAST) || dmginfo:IsDamageType(DMG_CLUB)) and !self.PlayingSequence2 and !self.PlayingSequence) then
-		local selanim = table.Random({"Shoved_Backward_01","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+	if ((math.random(1,20) == 1 || dmginfo:IsDamageType(DMG_BLAST) || dmginfo:IsDamageType(DMG_CLUB))) then
+		local selanim = table.Random({"Shoved_Backward","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+		if (self.Pounced) then
+			selanim = table.Random({"Melee_pounce_Knockoff_Backward","Melee_pounce_Knockoff_Forward","Melee_pounce_Knockoff_l","Melee_pounce_Knockoff_r"})
+			self.Pounced = false
+		end
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
+		if (self:GetEnemy():IsPlayer()) then
+			self:GetEnemy():SetMoveType(MOVETYPE_WALK)
+		else
+			self:GetEnemy():SetMoveType(MOVETYPE_STEP)
+		end 
 		timer.Stop("ShovedFinish"..self:EntIndex())
 		timer.Create("ShovedFinish"..self:EntIndex(), self:SequenceDuration(anim) - 0.2, 1,function()
 			if (self:IsOnGround() and self.Ready) then
@@ -1332,8 +1420,8 @@ function ENT:OnInjured( dmginfo )
 					end
 				else
 					--self:SetCycle(0)
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
+					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
 				end
 			end
 		end)
@@ -1345,28 +1433,13 @@ function ENT:OnInjured( dmginfo )
 		dmginfo:ScaleDamage(0)
 		dmginfo:SetDamageType(DMG_GENERIC)
 	end
-	if (!self.flinchFinish) then
-		self:RestartGesture(self:GetSequenceActivity(self:LookupSequence("flinch_02")),true)
-		self.flinchFinish = true
-		timer.Create("FlinchFinished"..self:EntIndex(), self:SequenceDuration(self:LookupSequence("flinch_02")), 1, function()
-			self.flinchFinish = false
-		end)
-	end
 	if (dmginfo:IsDamageType(DMG_BULLET) and self:Health() > 0) then
 		if (math.random(1,6) == 1) then
-			self:EmitSound("BoomerZombie.BulletImpact")
+			self:EmitSound("smokerZombie.BulletImpact")
 		end
 	end
 	if (!dmginfo:IsDamageType(DMG_BURN)) then
-		if (dmginfo:IsDamageType(DMG_BLAST)) then
-			dmginfo:SetDamage(50)	
-		else
-			if (!dmginfo:IsDamageType(DMG_BULLET)) then
-				dmginfo:ScaleDamage(1.5)	
-			else
-				dmginfo:SetDamage(50)	
-			end
-		end
+		dmginfo:ScaleDamage(1.5)	
 	else
 		dmginfo:ScaleDamage(1.5)
 	end
@@ -1412,44 +1485,19 @@ function ENT:OnKilled( dmginfo )
 	local pos = self:GetPos()
 	self:PrecacheGibs()
 	if SERVER then
-		
+		if (IsValid(self.Enemy)) then
+			if (self:GetEnemy():IsPlayer()) then
+				self:GetEnemy():SetMoveType(MOVETYPE_WALK)
+			else
+				self:GetEnemy():SetMoveType(MOVETYPE_STEP)
+			end
+		end
 		self.Ready = false
 				if (IsValid(self)) then
 					self:EmitSound("PlayerZombie.Die")
-					self:EmitSound("BoomerZombie.Detonate")
+					self:EmitSound("smokerZombie.Death")
+					self:EmitSound("SmokerZombie.Explode")
 						
-					for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self and v:Visible(self)) then 
-							self.loco:ClearStuck() 
-							local dmginfo = DamageInfo()
-							dmginfo:SetAttacker(self)
-							dmginfo:SetInflictor(self)
-							dmginfo:SetDamageType(bit.bor(DMG_BLAST,DMG_POISON))
-							dmginfo:SetDamage(16)
-							if (GetConVar("skill"):GetInt() > 1) then
-								dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
-							end
-							v:TakeDamageInfo(dmginfo) 
-							v.AttractedToInfected = true
-							
-							timer.Simple(15, function()
-								if (IsValid(v)) then
-									v.AttractedToInfected = true
-									if (v:IsPlayer()) then
-										v:SendLua("DrawMaterialOverlay( '', -0.06 )")
-									end
-								end
-							end)
-							if (v:IsPlayer()) then
-								v:SendLua("LocalPlayer():EmitSound('Event.VomitInTheFace')")
-								if (v:IsPlayer()) then
-									v:SendLua("DrawMaterialOverlay( 'models/shadertest/shader4', -0.06 )")
-								end
-							end
-						end
-					end
-					ParticleEffectAttach("boomer_explode", PATTACH_POINT_FOLLOW, self, 1 )
-					self:SetModel("models/infected/limbs/exploded_boomer.mdl")
 					self:BecomeRagdoll(dmginfo)
 				end	
 	end
@@ -1461,11 +1509,10 @@ if CLIENT then
 		if (LocalPlayer():GetPos():Distance(self:GetPos()) < 3200) then
 			self:DrawModel()
 		end
-	end
-
+	end 
 end 
-list.Set( "NPC", "boomer", {
-	Name = "The Boomer",
-	Class = "npc_boomer",
+list.Set( "NPC", "smoker", {
+	Name = "The smoker",
+	Class = "npc_smoker",
 	Category = "Left 4 Dead 2"
 })

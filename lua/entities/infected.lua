@@ -1777,10 +1777,10 @@ function ENT:Think()
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
 							self.loco:SetDesiredSpeed( 300 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
 						else
 							self.loco:SetDesiredSpeed(300)
-							self.loco:SetAcceleration(300)
+							self.loco:SetAcceleration(500)
 						end
 					end
 				end
