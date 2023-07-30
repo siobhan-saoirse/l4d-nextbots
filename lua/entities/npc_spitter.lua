@@ -916,7 +916,7 @@ function ENT:RunBehaviour()
 						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
-						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
+						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
 						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
@@ -933,7 +933,7 @@ function ENT:RunBehaviour()
 			if (self.ContinueRunning) then
 				-- Now that we have an enemy, the code in this block will run
 				--self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				self:MoveToPos( self:GetEnemy():GetPos() ) -- Walk to a random place within about 400 units (yielding)
+				self.loco:Approach( self:GetEnemy():GetPos() ) -- Walk to a random place within about 400 units (yielding)
 				-- Now once the above function is finished doing what it needs to do, the code will loop back to the start
 				-- unless you put stuff after the if statement. Then that will be run before it loops
 			end
@@ -1309,10 +1309,6 @@ function ENT:ChaseEnemy( options )
 			"spitterZombie.Alert",
 			"spitterZombie.Alert",
 			"spitterZombie.Alert",
-			"spitterZombie.Voice",
-			"spitterZombie.Voice",
-			"spitterZombie.Voice",
-			"spitterZombie.Voice",
 			"spitterZombie.Recognize",
 			"spitterZombie.Recognize",
 		}

@@ -75,7 +75,7 @@ ENT.Type			= "nextbot"
 ENT.Name			= "Charger"
 ENT.Spawnable		= false
 ENT.AttackDelay = 50
-ENT.AttackDamage = 6
+ENT.AttackDamage = 10
 ENT.AttackRange = 65
 ENT.AttackRange2 = 120
 ENT.RangedAttackRange = 1800
@@ -696,7 +696,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						local dmginfo = DamageInfo()
 						dmginfo:SetAttacker(self)
 						dmginfo:SetInflictor(self)
-						dmginfo:SetDamageType(bit.bor(DMG_SLASH,DMG_CRUSH))
+						dmginfo:SetDamageType(bit.bor(DMG_CLUB,DMG_CRUSH))
 						dmginfo:SetDamage(self.AttackDamage)
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
@@ -913,9 +913,9 @@ function ENT:RunBehaviour()
 				if (self:IsOnGround()) then
 					if (math.random(1,800) == 1) then
 						local act = self:GetSequenceActivity(self:LookupSequence("charger_walk"))
-						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
-						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
+						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
+						self:StartActivity( act )
 						self.Walking = true 
 					else
 						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_walk"))) then
@@ -932,7 +932,7 @@ function ENT:RunBehaviour()
 			if (self.ContinueRunning) then
 				-- Now that we have an enemy, the code in this block will run
 				--self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				self:MoveToPos( self:GetEnemy():GetPos() ) -- Walk to a random place within about 400 units (yielding)
+				self.loco:Approach( self:GetEnemy():GetPos() ) -- Walk to a random place within about 400 units (yielding)
 				-- Now once the above function is finished doing what it needs to do, the code will loop back to the start
 				-- unless you put stuff after the if statement. Then that will be run before it loops
 			end
@@ -1146,14 +1146,13 @@ function ENT:Think()
 						self:AddGesture(anim)
 						self.loco:ClearStuck() 
 						self.DontWannaUseSameSequence = false
-						self.loco:ClearStuck() 
 						self:SetPlaybackRate(1)
 						--self:SetCycle(0)
 					end
 				end
 			end
-			if (IsValid(self:GetEnemy()) and self:IsOnGround() and !self.PlayingSequence3 and !self.PlayingSequence2) then
-				if (!self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0) then
+			if (IsValid(self:GetEnemy()) and self:IsOnGround()) then
+				if (!self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
@@ -1162,10 +1161,9 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 0.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
-							self.DontWannaUseSameSequence = false
 						end
 					end
 					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
@@ -1258,10 +1256,9 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 0.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
-							self.DontWannaUseSameSequence = false
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
