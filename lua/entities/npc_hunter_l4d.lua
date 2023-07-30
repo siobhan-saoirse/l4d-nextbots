@@ -114,7 +114,7 @@ hook.Add("EntityEmitSound","hunterHearSound",function(snd)
 			snd.SoundName = string.Replace(snd.SoundName, "wade8", "wade4")
 			snd.SoundName = string.Replace(snd.SoundName, "snow5", "snow1")
 			snd.SoundName = string.Replace(snd.SoundName, "snow6", "snow2")
-			snd.Channel = CHAN_BODY
+			snd.Channel = CHAN_STATIC //CHAN_BODY
 			local speed = snd.Entity:GetVelocity():Length()
 			local groundspeed = snd.Entity:GetVelocity():Length2DSqr()
 			snd.Volume = 1

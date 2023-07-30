@@ -99,14 +99,14 @@ local modeltbl = {
 
 hook.Add("EntityEmitSound","smokerHearSound",function(snd)
 	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/boom") and string.find(snd.SoundName, "step") then
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/smoker") and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
 			snd.SoundName = string.Replace(snd.SoundName, "wade8", "wade4")
 			snd.SoundName = string.Replace(snd.SoundName, "snow5", "snow1")
 			snd.SoundName = string.Replace(snd.SoundName, "snow6", "snow2")
-			snd.Channel = CHAN_BODY
+			snd.Channel = CHAN_STATIC //CHAN_BODY
 			local speed = snd.Entity:GetVelocity():Length()
 			local groundspeed = snd.Entity:GetVelocity():Length2DSqr() 
 			snd.Volume = 1
@@ -1529,7 +1529,7 @@ if CLIENT then
 	end 
 end 
 list.Set( "NPC", "smoker", {
-	Name = "The smoker",
+	Name = "The Smoker",
 	Class = "npc_smoker",
 	Category = "Left 4 Dead 2"
 })
