@@ -1925,7 +1925,7 @@ function ENT:OnInjured( dmginfo )
 	elseif (dmginfo:IsDamageType(DMG_CLUB) and self:Health() > 0 and math.random(1,4) == 1) then
 		self:EmitSound("L4D_Zombie.Shot")
 	end
-	if ((math.random(1,8) == 1 && dmginfo:IsDamageType(DMG_BULLET) || dmginfo:IsDamageType(DMG_CLUB)) and !dmginfo:IsDamageType(DMG_DROWN)) then
+	if (((math.random(1,8) == 1 && dmginfo:IsDamageType(DMG_BULLET) || dmginfo:IsDamageType(DMG_CLUB)) and !dmginfo:IsDamageType(DMG_DROWN)) and self:Health() >= 0) then
 		local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
