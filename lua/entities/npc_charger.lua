@@ -2,13 +2,13 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
-	language.Add("npc_hunter_l4d", "Hunter")
-end 
+	language.Add("npc_charger", "charger")
+end
 local function getAllInfected()
-	local npcs = {} 
+	local npcs = {}
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
-			if (v:GetClass() == "npc_hunter_l4d") then
+			if (v:GetClass() == "npc_charger") then
 				if (v:Health() > 1) then
 					table.insert(npcs, v)
 				end
@@ -27,9 +27,9 @@ local function lookForNextPlayer(ply)
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
-				end 
+				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_charger"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -72,7 +72,7 @@ end
 
 ENT.Base 			= "base_nextbot"
 ENT.Type			= "nextbot"
-ENT.Name			= "Tank"
+ENT.Name			= "Charger"
 ENT.Spawnable		= false
 ENT.AttackDelay = 50
 ENT.AttackDamage = 6
@@ -85,29 +85,12 @@ ENT.Walking = false
 ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
 local modeltbl = {
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter.mdl",
-	"models/infected/hunter_l4d1.mdl",
-	"models/infected/hunter_l4d1.mdl",
-	"models/infected/hunter_l4d1.mdl",
-	"models/infected/hunter_l4d1.mdl",
-	"models/infected/hunter_l4d1.mdl",
-	"models/infected/hunter_l4d1.mdl",
+	"models/infected/charger.mdl",
 }
 
-hook.Add("EntityEmitSound","hunterHearSound",function(snd)
+hook.Add("EntityEmitSound","chargerHearSound",function(snd)
 	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/boom") and string.find(snd.SoundName, "step") then
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/charger") and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
@@ -133,18 +116,28 @@ hook.Add("EntityEmitSound","hunterHearSound",function(snd)
 			end]]
 				
 			if (snd.Entity:WaterLevel() < 1) then  
-				snd.SoundName = string.Replace(snd.SoundName, "player/footsteps/", "player/footsteps/infected/run/")
-				snd.Volume = 0
+				local sides = {
+					"left",
+					"left",
+					"left",
+					"left",
+					"right",
+					"right",
+					"right",
+					"right"
+				}
+				snd.SoundName = string.Replace(snd.SoundName,snd.SoundName, "player/footsteps/charger/run/charger_run_"..table.Random(sides).."_0"..math.random(1,4)..".wav")
+				snd.Volume = 1
 			elseif (snd.Entity:WaterLevel() < 2) then
 				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
-				snd.Volume = 0
+				snd.Volume = 1
 			else
 				snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/infected/run/wade"..math.random(1,4)..".wav")
-				snd.Volume = 0
+				snd.Volume = 1
 			end
-			snd.Pitch = math.random(95,105)
+			snd.Pitch = math.random(95,105) 
 			return true
-		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"female") and string.find(snd.Entity:GetModel(),"hunter") then
+		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and string.find(snd.SoundName,"female") and string.find(snd.Entity:GetModel(),"charger") then
 			snd.SoundName = string.Replace(snd.SoundName, "female", "male")
 			
 			return true
@@ -154,7 +147,7 @@ hook.Add("EntityEmitSound","hunterHearSound",function(snd)
 			return true
 		elseif ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
 			for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
-				if (v:GetClass() == "npc_hunter_l4d" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
+				if (v:GetClass() == "npc_charger" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
 					v:SetEnemy(snd.Entity)
 				end
 			end
@@ -212,7 +205,7 @@ function ENT:CanSee(ply, fov)
 end
 
 function ENT:Shove(anim)
-	self:EmitSound("hunterZombie.Shoved")
+	self:EmitSound("chargerZombie.Shoved")
 end
 
 -- these 6 funcs are not mine, by dragoteryx
@@ -304,7 +297,6 @@ function ENT:GetMovement(ignoreZ)
 	return (self:GetAngles()-dir:Angle()):Forward()
 end
 
-
 function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
 	if not isstring(yaw) then
 		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
@@ -347,7 +339,7 @@ end
 
 function ENT:Initialize()
 
-	game.AddParticles( "particles/hunter_fx.pcf" )
+	game.AddParticles( "particles/charger_fx.pcf" )
 	if SERVER then
 		if (!self.DontReplaceModel) then
 			local rnd = table.Random(modeltbl)
@@ -363,7 +355,7 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
-	self:SetHealth(250) 
+	self:SetHealth(600) 
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -380,7 +372,7 @@ function ENT:Initialize()
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
 		self:SetSkin(math.random(0,self:SkinCount()-1))
-		self:EmitSound("hunterZombie.Gurgle")
+		self:EmitSound("chargerZombie.Gurgle")
 		for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
 			if (IsValid(v)) then
 				if (table.Count(getAllInfected()) > 30) then
@@ -403,7 +395,7 @@ function ENT:Initialize()
 		--self:SetBodygroup(0,math.random(1,2))
 		--self:SetBodygroup(1,math.random(1,2))
 		
-		local mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))
+		local mad = self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))
 		self:StartActivity( mad )
 		timer.Simple(1, function()
 		
@@ -414,7 +406,7 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound("hunterZombie.Voice")
+			self:EmitSound("chargerZombie.Voice")
 		end
 
 	end)
@@ -441,7 +433,7 @@ end
 
 function ENT:OnRemove()
 	if SERVER then
-		self:StopSound("hunterZombie.Gurgle")
+		self:StopSound("chargerZombie.Gurgle")
 	end
 	timer.Stop("IdleExpression"..self:EntIndex())
 	timer.Stop("AngryExpression"..self:EntIndex())
@@ -457,8 +449,9 @@ function ENT:SetEnemy(ent)
 	if (ent != nil and ent:IsNextBot()) then return end
 	self.Enemy = ent
 	self.Pounced = false
-	timer.Stop("HunterPounce"..self:EntIndex())
-	timer.Stop("HunterPounceShred"..self:EntIndex())
+	self:StopSound("chargerZombie.Ride")
+	timer.Stop("chargerPounce"..self:EntIndex())
+	timer.Stop("chargerPounceShred"..self:EntIndex())
 	if (ent != nil) then
 		self.Idling = false
 	end
@@ -511,13 +504,13 @@ function ENT:HaveEnemy()
 					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 				else
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("charger_run"))  ) )			-- Set the animation
 				end
 			else
 				--self:SetCycle(0)
 				if (!self.Idling and !self.PlayingSequence3) then
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) 
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
+					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
 					self.Idling = true
 				end
 			end
@@ -541,7 +534,7 @@ function ENT:FindEnemy()
 				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsFriendly(self) and GAMEMODE:EntityTeam(v) != TEAM_SPECTATOR and GAMEMODE:EntityTeam(v) != TEAM_FRIENDLY and v:Health() > 1 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("hunterZombie.RageAtVictim")
+					--self:EmitSound("chargerZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -580,10 +573,10 @@ function ENT:FindEnemy()
 				end
 			else
 
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_hunter_l4d"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_charger"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
-					--self:EmitSound("hunterZombie.RageAtVictim")
+					--self:EmitSound("chargerZombie.RageAtVictim")
 					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
 						if (!IsValid(v:GetEnemy())) then
 							v:SetEnemy(self)
@@ -693,7 +686,11 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
-							"Weapon_Knife.Hit",
+							"ChargerZombie.Smash",
+							85, 100
+						)
+						self:EmitSound(
+							"ChargerZombie.Smash",
 							85, 100
 						)
 						local dmginfo = DamageInfo()
@@ -815,9 +812,9 @@ hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
 
 end)
 
-hook.Add("ScaleNPCDamage","HunterDamage",function(npc,hitgroup,dmginfo)
+hook.Add("ScaleNPCDamage","chargerDamage",function(npc,hitgroup,dmginfo)
 	
-	if (npc:GetClass() == "npc_hunter_l4d") then	
+	if (npc:GetClass() == "npc_charger") then	
 		if (hitgroup == HITGROUP_HEAD) then
 			
 			if (!npc.flinchFinish) then 
@@ -901,10 +898,10 @@ function ENT:RunBehaviour()
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
-				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))) then
+				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
-					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) ) 
+					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("charger_run")) ) 
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
@@ -915,14 +912,14 @@ function ENT:RunBehaviour()
 				-- Its the same code used in Garry's test bot
 				if (self:IsOnGround()) then
 					if (math.random(1,800) == 1) then
-						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
+						local act = self:GetSequenceActivity(self:LookupSequence("charger_walk"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
 						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
-						if (self:GetCycle() == 1 and self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01")) ) 
+						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_walk"))) then
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) ) 
 						end
 						self.Walking = false
 					end
@@ -1020,25 +1017,18 @@ function ENT:Think()
 		end
 		if (self.Idling and self:GetCycle() == 1 and !self.PlayingSequence3) then
 			self:SetCycle(0)
-			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) 
+			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
 		end
 		if (!self:IsOnGround()) then
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
-				if (self.Pouncing) then
-					self:ResetSequence("Pounce_01")
-					timer.Simple(self:SequenceDuration(self:LookupSequence("pounce_01")), function()
-						self:ResetSequence("Pounce_Idle_01")
-					end)
-				else
-					self:ResetSequence("jump")
-				end
-				self:EmitSound("hunterZombie.Fall")
+				self:ResetSequence("jump")
+				self:EmitSound("chargerZombie.Fall")
 				self.FallDamage = 10;
 				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.8, 0, function()
 					if (!self:IsOnGround()) then
 
-						self:EmitSound("HunterZombie.Pounce.FlyLoop")
+						self:EmitSound("chargerZombie.Pounce.FlyLoop")
 
 					end
 				end)
@@ -1054,26 +1044,26 @@ function ENT:Think()
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 	
 							else
-								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("charger_run"))  ) )			-- Set the animation
 							end
 						else
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) )
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  )
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  )
 						end
 					end
 				if (self.Pouncing) then
-					self:EmitSound("HunterZombie.Pounce.Miss")
+					self:EmitSound("chargerZombie.Pounce.Miss")
 				else
 					self:EmitSound("PlayerZombie.JumpLand")
 				end
 				self.HaventLandedYet = false
 			end
 		end
-		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
+		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_run")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
 			self:PlayActivityAndWait( self:GetActivity() )
-		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
+		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
 
-			local mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))
+			local mad = self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
 			self.Idling = true
@@ -1144,13 +1134,13 @@ function ENT:Think()
 			end
 			if (IsValid(self.Door) and !self.ContinueRunning and self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
 				local targetheadpos,targetheadang = self.Door:GetBonePosition(1) -- Get the position/angle of the head.
-				if (!self.MeleeAttackDelay2 or CurTime() > self.MeleeAttackDelay2) then
+				if (!self.MeleeAttackDelay or CurTime() > self.MeleeAttackDelay) then
 					if (self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
 						self.OldEnemy = self.Enemy
 						self.Ready = false
 						self.WasAttackingDoor = true
 						self:SetEnemy(nil)
-						local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+						local selanim = self:LookupSequence("charger_punch")
 						local anim = self:GetSequenceActivity(selanim)
 						self.MeleeAttackDelay = CurTime() + 1.0
 						self:AddGesture(anim)
@@ -1170,10 +1160,7 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							if (math.random(1,6) == 1) then
-								self:EmitSound("PlayerZombie.Attack")
-							end
-							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
@@ -1186,12 +1173,11 @@ function ENT:Think()
 						self:SetPoseParameter("move_y",0)
 					end
 				end
+				--[[
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
-							self:EmitSound("HunterZombie.Pounce")
-							
 							local shouldvegoneforthehead = self:GetEnemy():EyePos()
 							local bone = 1
 							shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
@@ -1210,8 +1196,8 @@ function ENT:Think()
 												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 													self:SetCollisionGroup(COLLISION_GROUP_NPC)
 												end
-												self:EmitSound("HunterZombie.Pounce.Hit")
-												local selanim = self:LookupSequence("melee_pounce")
+												self:EmitSound("chargerZombie.Ride")
+												local selanim = self:LookupSequence("charger_ride")
 												local anim = self:GetSequenceActivity(selanim)
 												self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
 												self:PlaySequenceAndMove(selanim)
@@ -1219,18 +1205,16 @@ function ENT:Think()
 												if (self:GetEnemy():IsPlayer()) then
 													self:GetEnemy():StripWeapons()	
 												end
-												timer.Stop("HunterPounce"..self:EntIndex())
-												timer.Stop("HunterPounceShred"..self:EntIndex())
-												timer.Create("HunterPounceShred"..self:EntIndex(), 0.8, 0, function()
-													self:EmitSound("HunterZombie.Pounce.shred")
-												end)
-												timer.Create("HunterPounce"..self:EntIndex(), 0.5, 0, function()
+												timer.Stop("chargerPounce"..self:EntIndex())
+												timer.Stop("chargerPounceShred"..self:EntIndex())
+												timer.Create("chargerPounce"..self:EntIndex(), 1.0, 0, function()
 													local dmginfo = DamageInfo()
 													dmginfo:SetAttacker(self)
 													dmginfo:SetInflictor(self)
 													dmginfo:SetDamageType(DMG_SLASH)
 													dmginfo:SetDamage(6)
 													self:GetEnemy():TakeDamageInfo(dmginfo)
+													self:GetEnemy():EmitSound("PlayerZombie.AttackHit")
 												end)
 												self.loco:ClearStuck() 
 												self.DontWannaUseSameSequence = false
@@ -1248,38 +1232,21 @@ function ENT:Think()
 								if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 									self:SetCollisionGroup(COLLISION_GROUP_NPC)
 								end
-								if (math.random(1,6) == 1) then
-									self:EmitSound("PlayerZombie.Attack")
-								end
-								local selanim = self:LookupSequence("melee_pounce")
+								local selanim = self:LookupSequence("charger_ride")
 								local anim = self:GetSequenceActivity(selanim)
 								self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
-								self:SetPos(self:GetEnemy():GetPos())
 								self:PlaySequenceAndMove(selanim)
 								self:GetEnemy():SetMoveType(MOVETYPE_NONE)
 								if (self:GetEnemy():IsPlayer()) then
 									self:GetEnemy():StripWeapons()	
 								end
-								timer.Stop("HunterPounce"..self:EntIndex())
-								timer.Stop("HunterPounceShred"..self:EntIndex())
-								timer.Create("HunterPounceShred"..self:EntIndex(), 0.8, 0, function()
-									self:EmitSound("HunterZombie.Pounce.shred")
-								end)
-								timer.Create("HunterPounce"..self:EntIndex(), 0.5, 0, function()
-									local dmginfo = DamageInfo()
-									dmginfo:SetAttacker(self)
-									dmginfo:SetInflictor(self)
-									dmginfo:SetDamageType(DMG_SLASH)
-									dmginfo:SetDamage(6)
-									self:GetEnemy():TakeDamageInfo(dmginfo)
-								end)
 								self.loco:ClearStuck() 
 								self.DontWannaUseSameSequence = false
 
 							end
 						end
 					end
-				end
+				end]]
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
 					self.loco:SetAcceleration(-270)
@@ -1289,10 +1256,7 @@ function ENT:Think()
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
-							if (math.random(1,6) == 1) then
-								self:EmitSound("PlayerZombie.Attack")
-							end
-							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
+							local selanim = self:LookupSequence("charger_punch")
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 1.0
 							self:AddGesture(anim)
@@ -1301,10 +1265,10 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 300 + (GetConVar("skill"):GetInt() * 35) )
+							self.loco:SetDesiredSpeed( 250 + (GetConVar("skill"):GetInt() * 35) )
 							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
 						else
-							self.loco:SetDesiredSpeed(300)
+							self.loco:SetDesiredSpeed(250)
 							self.loco:SetAcceleration(500)
 						end
 					end
@@ -1340,11 +1304,11 @@ function ENT:ChaseEnemy( options )
 	if ( !path:IsValid() ) then return "failed" end
 
 	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self.PlayingSequence and !self.PlayingSequence2) then 
-		self:EmitSound("hunterZombie.Alert")
+		self:EmitSound("chargerZombie.Alert")
 		self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
-		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
+		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("charger_run"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
 			if (self.loco:IsUsingLadder()) then
 				self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
 			else
@@ -1354,7 +1318,7 @@ function ENT:ChaseEnemy( options )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("charger_run"))  ) )			-- Set the animation
 					end
 				end
 			end
@@ -1362,14 +1326,14 @@ function ENT:ChaseEnemy( options )
 		local pos = self:GetEnemy():GetPos()
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do -- avoid other infected
-				if (v:GetClass() == "npc_hunter_l4d" and v:EntIndex() != self:EntIndex()) then
+				if (v:GetClass() == "npc_charger" and v:EntIndex() != self:EntIndex()) then
 					--pos = self:GetEnemy():GetPos() + (self:GetForward() + v:GetForward()*(-130)) + (v:GetRight() * -130 - self:GetRight()*(130))
 					self:SetCollisionGroup(COLLISION_GROUP_NPC)
 				end
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_hunter_l4d")) then
+			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "npc_charger")) then
 				self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			else
 				self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1422,9 +1386,9 @@ function ENT:OnInjured( dmginfo )
 	end
 	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
 		if (dmginfo:IsDamageType(DMG_BURN)) then
-			self:EmitSound("hunterZombie.Pain")
+			self:EmitSound("chargerZombie.Pain")
 		else
-			self:EmitSound("hunterZombie.PainShort")
+			self:EmitSound("chargerZombie.PainShort")
 		end
 		self.PainSoundTime = CurTime() + 0.7
 	end
@@ -1455,12 +1419,12 @@ function ENT:OnInjured( dmginfo )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("charger_run"))  ) )			-- Set the animation
 					end
 				else
 					--self:SetCycle(0)
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) 
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle"))  ) )
+					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle"))  ) 
 				end
 			end
 		end)
@@ -1474,7 +1438,7 @@ function ENT:OnInjured( dmginfo )
 	end
 	if (dmginfo:IsDamageType(DMG_BULLET) and self:Health() > 0) then
 		if (math.random(1,6) == 1) then
-			self:EmitSound("hunterZombie.BulletImpact")
+			self:EmitSound("chargerZombie.BulletImpact")
 		end
 	end
 	if (!dmginfo:IsDamageType(DMG_BURN)) then
@@ -1534,14 +1498,9 @@ function ENT:OnKilled( dmginfo )
 		self.Ready = false
 				if (IsValid(self)) then
 					self:EmitSound("PlayerZombie.Die")
-					self:EmitSound("HunterZombie.Death")
+					self:EmitSound("chargerZombie.Death")
 						
 					self:BecomeRagdoll(dmginfo)
-					timer.Simple(0.1, function()
-						if (IsValid(self)) then
-							self:Remove()
-						end
-					end)
 				end	
 	end
 end
@@ -1554,8 +1513,8 @@ if CLIENT then
 		end
 	end 
 end 
-list.Set( "NPC", "hunter", {
-	Name = "The Hunter",
-	Class = "npc_hunter_l4d",
+list.Set( "NPC", "charger", {
+	Name = "The Charger",
+	Class = "npc_charger",
 	Category = "Left 4 Dead 2"
 })

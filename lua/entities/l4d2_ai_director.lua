@@ -69,6 +69,13 @@ ENT.MusicTable = {
 	"Event.Zombat_B_9",
 	"Event.Zombat_B_10",
 	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
 }
 
 ENT.MusicTable2 = {
@@ -231,10 +238,9 @@ function ENT:Initialize()
 
 					local bot = ents.Create("infected")
 					bot:SetAngles(Angle(0,math.random(0,360),0))
-					bot:SetPos(thevictim:GetPos())
+					bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
 					bot:SetOwner(self)
 					bot:Spawn()
-					bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
 					bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 					--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 					table.insert(self.infected,bot)
@@ -359,11 +365,11 @@ local zombies = {
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
-	//"npc_smoker",
-	//"npc_smoker",
-	//"npc_smoker",
-	//"npc_charger",
-	//"npc_charger",
+	"npc_smoker",
+	"npc_smoker",
+	"npc_smoker",
+	"npc_charger",
+	"npc_charger",
 	"npc_jockey",
 	"npc_jockey",
 	"npc_jockey",
@@ -375,7 +381,7 @@ local zombies = {
 	"npc_boomer",
 	//"npc_spitter",
 	"npc_hunter_l4d",
-	//"npc_smoker",
+	"npc_smoker",
 	"npc_boomer",
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
@@ -503,7 +509,7 @@ function ENT:RunBehaviour()
 		self.loco:SetDesiredSpeed( 1400 )		-- Walk speed
 		rnd = 40
 		if (!dinfected:GetBool()) then
-			rnd = 55
+			rnd = 60
 		end
 			if (math.random(1,rnd) == 1) then 
 				if (table.Count(self.bots) < 4) then 

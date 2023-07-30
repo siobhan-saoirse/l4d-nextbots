@@ -244,6 +244,21 @@ function ENT:SelectRandomSequence(anim)
 	return self:SelectWeightedSequenceSeeded(anim, math.random(0, 255))
 end
 
+function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
+	if not isstring(yaw) then
+		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
+	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
+	if isvector(pos) then
+		center = center or self:WorldSpaceCenter()
+		local angle = (pos - center):Angle()
+		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
+		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
+	else
+		self:SetPoseParameter(pitch, 0)
+		self:SetPoseParameter(yaw, 0)
+	end
+end
+
 function ENT:PlaySequenceAndMove(seq, options, callback)
 	if isstring(seq) then seq = self:LookupSequence(seq)
 	elseif not isnumber(seq) then return end
@@ -362,7 +377,11 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
-	self:SetHealth(4000) 
+	if (self.IsVersus) then
+		self:SetHealth(6000) 
+	else
+		self:SetHealth(4000) 
+	end
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -982,7 +1001,7 @@ function ENT:RunBehaviour()
 						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
-						if (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk"))) then
+						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk"))) then
 							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle")) ) 
 						end
 						self.Walking = false
@@ -1069,6 +1088,7 @@ function ENT:Think()
 	end
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos(), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1311,11 +1331,11 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
+							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) / self:GetModelScale() )
 							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
 						else
-							self.loco:SetDesiredSpeed(210)
-							self.loco:SetAcceleration(300)
+							self.loco:SetDesiredSpeed(210 / self:GetModelScale())
+							self.loco:SetAcceleration(500)
 						end
 					end
 				end

@@ -23,13 +23,13 @@ local function lookForNextPlayer(ply)
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 1300 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
-				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -74,7 +74,7 @@ local function nearestPipebomb(ply)
 					table.insert(npcs, v)
 				end
 			else
-				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or (v:IsPlayer() or v:IsNPC() and v.AttractedToInfected)) then
+				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or ((v:IsPlayer() or v:IsNPC()) and v.AttractedToInfected)) then
 					table.insert(npcs, v)
 				end
 			end
@@ -712,6 +712,22 @@ function ENT:GetMovement(ignoreZ)
 	if ignoreZ then dir.z = 0 end
 	return (self:GetAngles()-dir:Angle()):Forward()
 end
+
+function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
+	if not isstring(yaw) then
+		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
+	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
+	if isvector(pos) then
+		center = center or self:WorldSpaceCenter()
+		local angle = (pos - center):Angle()
+		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
+		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
+	else
+		self:SetPoseParameter(pitch, 0)
+		self:SetPoseParameter(yaw, 0)
+	end
+end
+
 function ENT:PlaySequenceAndWait2(seq, rate, callback)
 	if isstring(seq) then seq = self:LookupSequence(seq)
 	elseif not isnumber(seq) then return end
@@ -801,12 +817,8 @@ function ENT:Initialize()
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
 		self:SetSkin(math.random(0,self:SkinCount()-1))
-		for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
-			if (IsValid(v)) then
-				if (table.Count(getAllInfected()) > 30) then
-					self:Remove()
-				end
-			end
+		if (table.Count(getAllInfected()) > 30) then
+			self:Remove()
 		end
 		if SERVER then
 			for k,v in ipairs(ents.GetAll()) do
@@ -1513,7 +1525,11 @@ function ENT:Think()
 
 	end
 	if SERVER then 
+		if (table.Count(getAllInfected()) > 30) then
+			self:Remove()
+		end
 		if (IsValid(self:GetEnemy())) then
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos(), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1577,15 +1593,9 @@ function ENT:Think()
 			self.Idling = true
 		end
 		if (!GetConVar("ai_disabled"):GetBool() and self.Ready) then
-			if (math.random(1,4) == 1) then
-				for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
-					if (IsValid(v)) then
 						if (table.Count(getAllInfected()) >= 30) then -- now thats 30
 							self:Remove()
 						end
-					end
-				end
-			end
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (GAMEMODE:EntityTeam(self.Enemy) == TEAM_GREEN and !(self.Enemy:HasPlayerState(PLAYERSTATE_JARATED) and self.Enemy:HasPlayerState(PLAYERSTATE_PUKEDON))) then 
 					self.Enemy = nil
@@ -1777,10 +1787,10 @@ function ENT:Think()
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
 							self.loco:SetDesiredSpeed( 300 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
 						else
 							self.loco:SetDesiredSpeed(300)
-							self.loco:SetAcceleration(300)
+							self.loco:SetAcceleration(500)
 						end
 					end
 				end
