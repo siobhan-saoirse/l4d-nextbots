@@ -23,13 +23,13 @@ local function lookForNextPlayer(ply)
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 1300 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
-				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -74,7 +74,7 @@ local function nearestPipebomb(ply)
 					table.insert(npcs, v)
 				end
 			else
-				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or (v:IsPlayer() or v:IsNPC() and v.AttractedToInfected)) then
+				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or ((v:IsPlayer() or v:IsNPC()) and v.AttractedToInfected)) then
 					table.insert(npcs, v)
 				end
 			end

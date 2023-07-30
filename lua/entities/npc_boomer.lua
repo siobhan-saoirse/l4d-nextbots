@@ -1116,6 +1116,39 @@ function ENT:Think()
 									end
 									v:TakeDamageInfo(dmginfo) 
 									v.AttractedToInfected = true
+									local plr = table.Random(lookForNextPlayer(self))
+									local thevictim = ents.Create("infected")
+									thevictim:SetAngles(Angle(0,math.random(0,360),0))
+									thevictim:SetOwner(self)
+									thevictim:Spawn()
+									thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 8000,type="hiding",stepup,stepup=800,stepdown=800})
+									if (pos != nil) then
+										thevictim:SetPos(pos)
+									end
+									--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+									print("Creating horde infected #"..thevictim:EntIndex())
+									timer.Simple(0.025, function()
+										thevictim.SearchRadius = 10000
+										thevictim.LoseTargetDist = 20000
+									end)
+									for i=1,30 do
+
+										local bot = ents.Create("infected")
+										bot:SetAngles(Angle(0,math.random(0,360),0))
+										bot:SetPos(thevictim:GetPos())
+										bot:SetOwner(self)
+										bot:Spawn()
+										bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
+										bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+										--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+										bot.Enemy = v
+										print("Creating horde infected #"..bot:EntIndex())
+										timer.Simple(0.025, function()
+											bot.SearchRadius = 10000
+											bot.LoseTargetDist = 20000
+										end)
+									end
 									timer.Simple(15, function()
 										if (IsValid(v)) then
 											v.AttractedToInfected = true
@@ -1432,6 +1465,68 @@ function ENT:OnKilled( dmginfo )
 							v:TakeDamageInfo(dmginfo) 
 							v.AttractedToInfected = true
 							
+							for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
+								if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
+									self.loco:ClearStuck() 
+									local dmginfo = DamageInfo()
+									dmginfo:SetAttacker(self)
+									dmginfo:SetInflictor(self)
+									dmginfo:SetDamageType(bit.bor(DMG_ACID,DMG_POISON))
+									dmginfo:SetDamage(20)
+									if (GetConVar("skill"):GetInt() > 1) then
+										dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
+									end
+									v:TakeDamageInfo(dmginfo) 
+									v.AttractedToInfected = true
+									local plr = table.Random(lookForNextPlayer(self))
+									local thevictim = ents.Create("infected")
+									thevictim:SetAngles(Angle(0,math.random(0,360),0))
+									thevictim:SetOwner(self)
+									thevictim:Spawn()
+									thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 8000,type="hiding",stepup,stepup=800,stepdown=800})
+									if (pos != nil) then
+										thevictim:SetPos(pos)
+									end
+									--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+									print("Creating horde infected #"..thevictim:EntIndex())
+									timer.Simple(0.025, function()
+										thevictim.SearchRadius = 10000
+										thevictim.LoseTargetDist = 20000
+									end)
+									for i=1,30 do
+
+										local bot = ents.Create("infected")
+										bot:SetAngles(Angle(0,math.random(0,360),0))
+										bot:SetPos(thevictim:GetPos())
+										bot:SetOwner(self)
+										bot:Spawn()
+										bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
+										bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+										--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+										bot.Enemy = v
+										print("Creating horde infected #"..bot:EntIndex())
+										timer.Simple(0.025, function()
+											bot.SearchRadius = 10000
+											bot.LoseTargetDist = 20000
+										end)
+									end
+									timer.Simple(15, function()
+										if (IsValid(v)) then
+											v.AttractedToInfected = true
+											if (v:IsPlayer()) then
+												v:SendLua("DrawMaterialOverlay( '', -0.06 )")
+											end
+										end
+									end)
+									if (v:IsPlayer()) then
+										v:SendLua("LocalPlayer():EmitSound('Event.VomitInTheFace')")
+										if (v:IsPlayer()) then
+											v:SendLua("DrawMaterialOverlay( 'models/shadertest/shader4', -0.06 )")
+										end
+									end
+								end
+							end
 							timer.Simple(15, function()
 								if (IsValid(v)) then
 									v.AttractedToInfected = true

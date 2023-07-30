@@ -359,11 +359,11 @@ local zombies = {
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
-	//"npc_smoker",
-	//"npc_smoker",
-	//"npc_smoker",
-	//"npc_charger",
-	//"npc_charger",
+	"npc_smoker",
+	"npc_smoker",
+	"npc_smoker",
+	"npc_charger",
+	"npc_charger",
 	"npc_jockey",
 	"npc_jockey",
 	"npc_jockey",
@@ -375,7 +375,7 @@ local zombies = {
 	"npc_boomer",
 	//"npc_spitter",
 	"npc_hunter_l4d",
-	//"npc_smoker",
+	"npc_smoker",
 	"npc_boomer",
 	"npc_hunter_l4d",
 	"npc_hunter_l4d",
@@ -503,7 +503,7 @@ function ENT:RunBehaviour()
 		self.loco:SetDesiredSpeed( 1400 )		-- Walk speed
 		rnd = 40
 		if (!dinfected:GetBool()) then
-			rnd = 55
+			rnd = 60
 		end
 			if (math.random(1,rnd) == 1) then 
 				if (table.Count(self.bots) < 4) then 
