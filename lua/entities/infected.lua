@@ -1509,6 +1509,9 @@ function ENT:Think()
 
 	end
 	if SERVER then 
+		if (table.Count(getAllInfected()) > 30) then
+			self:Remove()
+		end
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
@@ -1573,15 +1576,6 @@ function ENT:Think()
 			self.Idling = true
 		end
 		if (!GetConVar("ai_disabled"):GetBool() and self.Ready) then
-			if (math.random(1,4) == 1) then
-				for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
-					if (IsValid(v)) then
-						if (table.Count(getAllInfected()) > 30) then
-							self:Remove()
-						end
-					end
-				end
-			end
 			if (engine.ActiveGamemode() == "teamfortress") then
 				if (GAMEMODE:EntityTeam(self.Enemy) == TEAM_GREEN and !(self.Enemy:HasPlayerState(PLAYERSTATE_JARATED) and self.Enemy:HasPlayerState(PLAYERSTATE_PUKEDON))) then 
 					self.Enemy = nil
