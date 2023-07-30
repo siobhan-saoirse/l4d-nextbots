@@ -712,6 +712,22 @@ function ENT:GetMovement(ignoreZ)
 	if ignoreZ then dir.z = 0 end
 	return (self:GetAngles()-dir:Angle()):Forward()
 end
+
+function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
+	if not isstring(yaw) then
+		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
+	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
+	if isvector(pos) then
+		center = center or self:WorldSpaceCenter()
+		local angle = (pos - center):Angle()
+		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
+		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
+	else
+		self:SetPoseParameter(pitch, 0)
+		self:SetPoseParameter(yaw, 0)
+	end
+end
+
 function ENT:PlaySequenceAndWait2(seq, rate, callback)
 	if isstring(seq) then seq = self:LookupSequence(seq)
 	elseif not isnumber(seq) then return end
@@ -1513,6 +1529,7 @@ function ENT:Think()
 			self:Remove()
 		end
 		if (IsValid(self:GetEnemy())) then
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos(), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end

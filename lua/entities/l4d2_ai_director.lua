@@ -69,6 +69,13 @@ ENT.MusicTable = {
 	"Event.Zombat_B_9",
 	"Event.Zombat_B_10",
 	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
 }
 
 ENT.MusicTable2 = {
@@ -231,10 +238,9 @@ function ENT:Initialize()
 
 					local bot = ents.Create("infected")
 					bot:SetAngles(Angle(0,math.random(0,360),0))
-					bot:SetPos(thevictim:GetPos())
+					bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
 					bot:SetOwner(self)
 					bot:Spawn()
-					bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
 					bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 					--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 					table.insert(self.infected,bot)

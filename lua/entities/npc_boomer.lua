@@ -806,6 +806,20 @@ hook.Add("EntityTakeDamage","L4D2BloodSplatterDamage",function(ent,dmginfo)
 
 end)
 
+function ENT:DirectPoseParametersAt(pos, pitch, yaw, center)
+	if not isstring(yaw) then
+		return self:DirectPoseParametersAt(pos, pitch.."_pitch", pitch.."_yaw", yaw)
+	elseif isentity(pos) then pos = pos:WorldSpaceCenter() end
+	if isvector(pos) then
+		center = center or self:WorldSpaceCenter()
+		local angle = (pos - center):Angle()
+		self:SetPoseParameter(pitch, math.AngleDifference(angle.p, self:GetAngles().p))
+		self:SetPoseParameter(yaw, math.AngleDifference(angle.y, self:GetAngles().y))
+	else
+		self:SetPoseParameter(pitch, 0)
+		self:SetPoseParameter(yaw, 0)
+	end
+end
 ----------------------------------------------------
 -- ENT:RunBehaviour()
 -- This is where the meat of our AI is
@@ -842,7 +856,7 @@ function ENT:RunBehaviour()
 						self:MoveToPos( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
 						self.Walking = true 
 					else
-						if (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
+						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
 							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) ) 
 						end
 						self.Walking = false
@@ -929,6 +943,7 @@ function ENT:Think()
 	end
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos(), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
