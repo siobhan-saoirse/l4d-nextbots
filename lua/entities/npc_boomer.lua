@@ -1122,7 +1122,7 @@ function ENT:Think()
 									thevictim:SetOwner(self)
 									thevictim:Spawn()
 									thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 8000,type="hiding",stepup,stepup=800,stepdown=800})
+									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 2000,type="hiding",stepup,stepup=800,stepdown=800})
 									if (pos != nil) then
 										thevictim:SetPos(pos)
 									end
@@ -1484,7 +1484,7 @@ function ENT:OnKilled( dmginfo )
 									thevictim:SetOwner(self)
 									thevictim:Spawn()
 									thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 8000,type="hiding",stepup,stepup=800,stepdown=800})
+									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 2000,type="hiding",stepup,stepup=800,stepdown=800})
 									if (pos != nil) then
 										thevictim:SetPos(pos)
 									end

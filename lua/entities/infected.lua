@@ -801,12 +801,8 @@ function ENT:Initialize()
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
 		self:SetSkin(math.random(0,self:SkinCount()-1))
-		for k,v in ipairs(ents.FindByClass("l4d2_ai_director")) do
-			if (IsValid(v)) then
-				if (table.Count(getAllInfected()) > 30) then
-					self:Remove()
-				end
-			end
+		if (table.Count(getAllInfected()) > 30) then
+			self:Remove()
 		end
 		if SERVER then
 			for k,v in ipairs(ents.GetAll()) do
