@@ -86,15 +86,6 @@ ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
 local modeltbl = {
 	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter.mdl",
-	"models/infected/spitter_l4d1.mdl",
-	"models/infected/spitter_l4d1.mdl",
-	"models/infected/spitter_l4d1.mdl",
 }
 
 hook.Add("EntityEmitSound","spitterHearSound",function(snd)
@@ -339,19 +330,9 @@ end
 function ENT:Initialize()
 
 	game.AddParticles( "particles/spitter_fx.pcf" )
-	if SERVER then
-		if (!self.DontReplaceModel) then
-			local rnd = table.Random(modeltbl)
-			self:SetModel( rnd )
-			if (string.find(rnd,"_male")) then
-				self.gender = "male"
-			elseif (string.find(rnd,"_female")) then
-				self.gender = "female"
-			else
-				self.gender = "male"
-			end
-		end
-	end
+	
+	local rnd = table.Random(modeltbl)
+	self:SetModel( rnd )
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 1800	-- How far to search for enemies
 	self:SetHealth(100) 
@@ -364,9 +345,12 @@ function ENT:Initialize()
 			self:SetColor(Color(128,128,0))
 			self:SetRenderMode( RENDERMODE_TRANSALPHADD )
 		end]]
+		ParticleEffectAttach("spitter_drool",PATTACH_POINT_FOLLOW,self,5)
+		ParticleEffectAttach("spitter_drool_foam",PATTACH_POINT_FOLLOW,self,5)
+		ParticleEffectAttach("spitter_drool_droplets",PATTACH_POINT_FOLLOW,self,5)
 		self:SetTrigger(true)
 		self:SetFOV(54)
-		self:SetBloodColor(BLOOD_COLOR_YELLOW)
+		self:SetBloodColor(BLOOD_COLOR_RED)
 		self:SetCollisionGroup(COLLISION_GROUP_NPC)
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
@@ -394,7 +378,7 @@ function ENT:Initialize()
 		--self:SetBodygroup(0,math.random(1,2))
 		--self:SetBodygroup(1,math.random(1,2))
 		
-		local mad = self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))
+		local mad = self:GetSequenceActivity(self:LookupSequence("standing_idle"))
 		self:StartActivity( mad )
 		timer.Simple(1, function()
 		
@@ -509,13 +493,13 @@ function ENT:HaveEnemy()
 					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 				else
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 				end
 			else
 				--self:SetCycle(0)
 				if (!self.Idling and !self.PlayingSequence3) then
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) )
+					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) 
 					self.Idling = true
 				end
 			end
@@ -899,10 +883,10 @@ function ENT:RunBehaviour()
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
-				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))) then
+				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("standing_idle"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
-					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) ) 
+					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run")) ) 
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
@@ -913,14 +897,14 @@ function ENT:RunBehaviour()
 				-- Its the same code used in Garry's test bot
 				if (self:IsOnGround()) then
 					if (math.random(1,800) == 1) then
-						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
+						local act = self:GetSequenceActivity(self:LookupSequence("walk"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
-						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
+						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400, 1 ) -- Walk to a random 
 						self.Walking = true 
 					else
-						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) ) 
+						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk"))) then
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle")) ) 
 						end
 						self.Walking = false
 					end
@@ -1018,7 +1002,7 @@ function ENT:Think()
 		end
 		if (self.Idling and self:GetCycle() == 1 and !self.PlayingSequence3) then
 			self:SetCycle(0)
-			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
+			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) 
 		end
 		if (!self:IsOnGround()) then
 			if (!self.HaventLandedYet) then 
@@ -1045,11 +1029,11 @@ function ENT:Think()
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 	
 							else
-								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 							end
 						else
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  )
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("standing_idle"))  ) )
+							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("standing_idle"))  )
 						end
 					end
 				if (self.Pouncing) then
@@ -1060,11 +1044,11 @@ function ENT:Think()
 				self.HaventLandedYet = false
 			end
 		end
-		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
+		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
 			self:PlayActivityAndWait( self:GetActivity() )
-		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
+		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
 
-			local mad = self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))
+			local mad = self:GetSequenceActivity(self:LookupSequence("standing_idle"))
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
 			self.Idling = true
@@ -1316,7 +1300,7 @@ function ENT:ChaseEnemy( options )
 		self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
-		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
+		if (!self.PlayingSequence3 and self:GetCycle() == 1 and self:GetSequence() != self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))) and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then  
 			if (self.loco:IsUsingLadder()) then
 				self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
 			else
@@ -1326,7 +1310,7 @@ function ENT:ChaseEnemy( options )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 					end
 				end
 			end
@@ -1427,7 +1411,7 @@ function ENT:OnInjured( dmginfo )
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run"))  ) )			-- Set the animation
 					end
 				else
 					--self:SetCycle(0)

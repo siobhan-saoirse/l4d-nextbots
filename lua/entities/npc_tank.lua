@@ -998,7 +998,7 @@ function ENT:RunBehaviour()
 						local act = self:GetSequenceActivity(self:LookupSequence("walk"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 210 * 0.5 )
-						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400 ) -- Walk to a random 
+						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400, 1 ) -- Walk to a random 
 						self.Walking = true 
 					else
 						if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk"))) then
