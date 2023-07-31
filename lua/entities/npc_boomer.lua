@@ -1471,7 +1471,7 @@ function ENT:OnKilled( dmginfo )
 					self:EmitSound("BoomerZombie.Detonate")
 						
 					for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self and v:Visible(self)) then 
+						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and v:GetClass() != "npc_boomer" and v:GetClass() != "npc_leaker") and v ~= self and v:Visible(self)) then 
 							self.loco:ClearStuck() 
 							local dmginfo = DamageInfo()
 							dmginfo:SetAttacker(self)
