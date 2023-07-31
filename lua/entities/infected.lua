@@ -964,9 +964,9 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
+	if (IsValid(ent) and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 	self.Enemy = ent
 	if (ent != nil) then
-		if (ent:IsPlayer() and (self:GetEnemy():IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 		self.Idling = false
 	end
 	for k,v in ipairs(nearestNPC(self)) do
