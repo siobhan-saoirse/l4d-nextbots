@@ -74,6 +74,7 @@ ENT.Base 			= "base_nextbot"
 ENT.Type			= "nextbot"
 ENT.Name			= "Tank"
 ENT.Spawnable		= false
+ENT.IsAL4DZombie = true
 ENT.AttackDelay = 50
 ENT.AttackDamage = 4
 ENT.AttackRange = 65
@@ -946,7 +947,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z)), "body", self:EyePos())
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1471,7 +1472,31 @@ function ENT:OnKilled( dmginfo )
 					self:EmitSound("BoomerZombie.Detonate")
 						
 					for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and v:GetClass() != "npc_boomer" and v:GetClass() != "npc_leaker") and v ~= self and v:Visible(self)) then 
+						if (v.IsAL4DZombie and v ~= self and v:Visible(self)) then
+							local selanim = table.Random({"Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
+							local anim = v:LookupSequence(selanim)
+							v:PlaySequenceAndMove(anim)
+							timer.Stop("ShovedFinish"..v:EntIndex())
+							timer.Create("ShovedFinish"..v:EntIndex(), v:SequenceDuration(anim) - 0.2, 1,function()
+								if (v:IsOnGround() and self.Ready) then
+									if (v:GetEnemy() != nil) then
+										if (string.find(v:GetModel(),"mud")) then
+
+											v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+
+										else
+											v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("run_4"))  ) )			-- Set the animation
+										end
+									else
+										--v:SetCycle(0)
+										v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("idle"))  ) )
+										v:PlayActivityAndMove( v:GetSequenceActivity(v:LookupSequence("idle"))  ) 
+									end
+								end
+							end)
+						end
+						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and !v.IsAL4DZombie) and v ~= self and v:Visible(self)) then 
+							
 							self.loco:ClearStuck() 
 							local dmginfo = DamageInfo()
 							dmginfo:SetAttacker(self)

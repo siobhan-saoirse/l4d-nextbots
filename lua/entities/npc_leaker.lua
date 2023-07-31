@@ -74,6 +74,7 @@ ENT.Base 			= "base_nextbot"
 ENT.Type			= "nextbot"
 ENT.Name			= "Tank"
 ENT.Spawnable		= false
+ENT.IsAL4DZombie = true
 ENT.AttackDelay = 50
 ENT.AttackDamage = 4
 ENT.AttackRange = 65
@@ -890,7 +891,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z)), "body", self:EyePos())
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
