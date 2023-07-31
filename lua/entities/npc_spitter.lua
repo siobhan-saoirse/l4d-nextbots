@@ -1001,7 +1001,7 @@ function ENT:Think()
 	end
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos(), "body", self:EyePos())
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,72), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
