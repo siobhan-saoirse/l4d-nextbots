@@ -90,7 +90,7 @@ ENT.Name			= "Infected"
 ENT.Spawnable		= false
 ENT.AttackDelay = 50
 ENT.AttackDamage = 3
-ENT.AttackRange = 90
+ENT.AttackRange = 75
 ENT.AttackRange2 = 190
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
@@ -319,26 +319,6 @@ local modeltbl = {
 	"models/infected/common_male_ceda.mdl",
 	"models/infected/common_male_ceda.mdl",
 	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_ceda.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_riot.mdl",
 	"models/infected/common_male_riot.mdl",
 	"models/infected/common_male_riot.mdl",
 	"models/infected/common_male_riot.mdl",
@@ -793,7 +773,11 @@ function ENT:Initialize()
 	end
 	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 200	-- How far to search for enemies
-	self:SetHealth(30) 
+	if (string.find(self:GetModel(),"jimmy")) then
+		self:SetHealth(200) 
+	else
+		self:SetHealth(30) 
+	end
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then
@@ -982,6 +966,7 @@ end
 function ENT:SetEnemy(ent)
 	self.Enemy = ent
 	if (ent != nil) then
+		if (ent:IsPlayer() and (self:GetEnemy():IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 		self.Idling = false
 	end
 	for k,v in ipairs(nearestNPC(self)) do
@@ -1237,7 +1222,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					local dmginfo = DamageInfo()
 					dmginfo:SetAttacker(self)
 					dmginfo:SetInflictor(self)
-					dmginfo:SetDamageType(bit.bor(DMG_SLASH,DMG_CLUB))
+					dmginfo:SetDamageType(DMG_CLUB)
 					dmginfo:SetDamage(self.AttackDamage)
 					if (GetConVar("skill"):GetInt() > 1) then
 						dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
@@ -1284,9 +1269,58 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						self:GetEnemy():SetViewPunchAngles(self:GetEnemy():GetViewPunchAngles() + (Angle(math.random(-16,16),math.random(-16,16),math.random(-16,16))))
 						self:GetEnemy():SendLua("LocalPlayer():EmitSound('Player.HitInternal')")
 					end
-					if (self:GetEnemy():GetClass() == "infected") then
-						if (math.random(1,20) == 1) then
+					if (self:GetEnemy():GetClass() == "infected" and self:GetEnemy():Health() > 0 and !self.PlayingSequence2 and !self.PlayingSequence3) then
+						if (math.random(1,30) == 1) then
 							self:GetEnemy():OnKilled(dmginfo)
+						else
+							local v = self:GetEnemy()
+							v:EmitSound("Weapon.HitInfected")
+							local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
+							local anim = v:LookupSequence(selanim)
+							v:PlaySequenceAndMove(anim)
+							v:EmitSound("L4D_Zombie.Shoved")
+							timer.Stop("ShovedFinish"..v:EntIndex())
+							timer.Create("ShovedFinish"..v:EntIndex(), v:SequenceDuration(anim) - 0.2, 1,function()
+								if (v:IsOnGround() and v.Ready) then
+									if (v:GetEnemy() != nil) then
+										if (string.find(v:GetModel(),"mud")) then
+					
+											v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+					
+										else
+											v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("run_01"))  ) )			-- Set the animation
+										end
+									else
+										--v:SetCycle(0)
+										v:ResetSequence( v:SelectWeightedSequence(v:GetSequenceActivity(v:LookupSequence("idle_neutral_01"))  ) )
+										v:PlayActivityAndMove( v:GetSequenceActivity(v:LookupSequence("idle_neutral_01"))  ) 
+									end
+								end
+							end)
+							
+							self:EmitSound("Weapon.HitInfected")
+							local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
+							local anim = self:LookupSequence(selanim)
+							self:PlaySequenceAndMove(anim)
+							self:EmitSound("L4D_Zombie.Shoved")
+							timer.Stop("ShovedFinish"..self:EntIndex())
+							timer.Create("ShovedFinish"..self:EntIndex(), self:SequenceDuration(anim) - 0.2, 1,function()
+								if (self:IsOnGround() and v.Ready) then
+									if (self:GetEnemy() != nil) then
+										if (string.find(self:GetModel(),"mud")) then
+					
+											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+					
+										else
+											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
+										end
+									else
+										--self:SetCycle(0)
+										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) )
+										self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) 
+									end
+								end
+							end)
 						end
 					end
 				end
@@ -1525,6 +1559,15 @@ function ENT:Think()
 
 	end
 	if SERVER then 
+		if (self.Ready) then
+			for k,v in ipairs(ents.FindInSphere(self:GetPos(),80)) do
+				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
+					self.PlayingSequence2 = false
+					self.PlayingSequence3 = false
+					self:SetEnemy(v)
+				end
+			end
+		end
 		if (table.Count(getAllInfected()) > 30) then
 			self:Remove()
 		end
@@ -1926,6 +1969,7 @@ function ENT:OnInjured( dmginfo )
 		self:EmitSound("L4D_Zombie.Shot")
 	end
 	if (((math.random(1,8) == 1 && dmginfo:IsDamageType(DMG_BULLET) || dmginfo:IsDamageType(DMG_CLUB)) and !dmginfo:IsDamageType(DMG_DROWN)) and self:Health() >= 0) then
+		self:EmitSound("Weapon.HitInfected")
 		local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
@@ -1956,6 +2000,7 @@ function ENT:OnInjured( dmginfo )
 		dmginfo:ScaleDamage(0)
 		dmginfo:SetDamageType(DMG_GENERIC)
 	elseif (dmginfo:IsDamageType(DMG_BLAST)) then
+		self:EmitSound("Weapon.HitInfected")
 		local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)

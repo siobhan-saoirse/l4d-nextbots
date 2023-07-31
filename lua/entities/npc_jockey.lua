@@ -443,6 +443,7 @@ function ENT:SetEnemy(ent)
 	timer.Stop("jockeyPounce"..self:EntIndex())
 	timer.Stop("jockeyPounceShred"..self:EntIndex())
 	if (ent != nil) then
+		if (ent:IsPlayer() and (self:GetEnemy():IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 		self.Idling = false
 	end
 	for k,v in ipairs(nearestNPC(self)) do
