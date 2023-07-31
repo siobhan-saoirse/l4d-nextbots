@@ -1223,7 +1223,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					dmginfo:SetAttacker(self)
 					dmginfo:SetInflictor(self)
 					dmginfo:SetDamageType(DMG_CLUB)
-					dmginfo:SetDamage(self.AttackDamage)
+					dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
 					if (GetConVar("skill"):GetInt() > 1) then
 						dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 					end
@@ -1260,7 +1260,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					dmginfo:SetAttacker(self)
 					dmginfo:SetInflictor(self)
 					dmginfo:SetDamageType(DMG_CRUSH)
-					dmginfo:SetDamage(self.AttackDamage)
+					dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
 					if (GetConVar("skill"):GetInt() > 1) then
 						dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 					end
@@ -1560,7 +1560,7 @@ function ENT:Think()
 	end
 	if SERVER then 
 		if (self.Ready) then
-			for k,v in ipairs(ents.FindInSphere(self:GetPos(),80)) do
+			for k,v in ipairs(ents.FindInSphere(self:GetPos(),60)) do
 				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
 					self.PlayingSequence2 = false
 					self.PlayingSequence3 = false
@@ -1572,7 +1572,8 @@ function ENT:Think()
 			self:Remove()
 		end
 		if (IsValid(self:GetEnemy())) then
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,72), "body", self:EyePos())
+			local bound1, bound2 = self:GetCollisionBounds()
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z)), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1829,8 +1830,8 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 300 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale() )
-							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale())
+							self.loco:SetDesiredSpeed( 300  )
+							self.loco:SetAcceleration(500 )
 						else
 							self.loco:SetDesiredSpeed(300 * self:GetModelScale())
 							self.loco:SetAcceleration(500 * self:GetModelScale())

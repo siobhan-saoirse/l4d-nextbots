@@ -817,7 +817,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						dmginfo:SetAttacker(self)
 						dmginfo:SetInflictor(self)
 						dmginfo:SetDamageType(DMG_CRUSH)
-						dmginfo:SetDamage(self.AttackDamage)
+						dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
 						v:SetPos(v:GetPos() + Vector(0,0,30))
 						v:SetVelocity(v:GetAimVector() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
@@ -1089,7 +1089,8 @@ function ENT:Think()
 	end
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,72), "body", self:EyePos())
+			local bound1, bound2 = self:GetCollisionBounds()
+			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z)), "body", self:EyePos())
 			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1332,8 +1333,8 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale() )
-							self.loco:SetAcceleration(300 + (GetConVar("skill"):GetInt() * 35) * self:GetModelScale())
+							self.loco:SetDesiredSpeed( 210  )
+							self.loco:SetAcceleration(300 )
 						else
 							self.loco:SetDesiredSpeed(210 * self:GetModelScale())
 							self.loco:SetAcceleration(500 * self:GetModelScale())

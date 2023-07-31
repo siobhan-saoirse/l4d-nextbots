@@ -270,6 +270,7 @@ function ENT:Think()
 				table.remove(self.horde,k)
 			end
 		end
+		--[[
 		if (table.Count(self.infected) > 15 and !self.HordeMode) then
 			self.HordeMode = !self.HordeMode
 
@@ -310,7 +311,7 @@ function ENT:Think()
 					self.Music2:PlayEx(0.3,100)
 				end
 			end) 
-		end 
+		end]]
 		if (table.Count(self.infected) < 15) then 
 			self.HordeMode = false
 			self.StopPlayingSounds = true
@@ -613,6 +614,26 @@ function ENT:RunBehaviour()
 								debugoverlay.Text( bot:GetPos(), "Removing infected #"..bot:EntIndex(), 3, false )
 							end
 						end)
+						local thevictim = bot
+						if (math.random(1,3) == 1) then
+							for i=1,math.random(1,5) do
+
+								local bot = ents.Create("infected")
+								bot:SetAngles(Angle(0,math.random(0,360),0))
+								bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
+								bot:SetOwner(self)
+								bot:Spawn()
+								bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+								--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+								table.insert(self.infected,bot)
+								table.insert(self.horde,bot)
+								print("Creating horde infected #"..bot:EntIndex())
+								timer.Simple(0.025, function()
+									bot.SearchRadius = 10000
+									bot.LoseTargetDist = 20000
+								end)
+							end
+						end
 					end
 					coroutine.wait(6)
 				end
