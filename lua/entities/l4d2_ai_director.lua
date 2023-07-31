@@ -519,9 +519,6 @@ function ENT:RunBehaviour()
 					bot:SetPos(self:GetPos())
 					bot:Spawn()
 					bot:Activate()
-					if (bot:GetClass() != "npc_tank") then
-						bot.Enemy = table.Random(player.GetAll())
-					end
 						if (IsValid(bot)) then
 							local pos
 							if (plr != nil) then
@@ -552,7 +549,6 @@ function ENT:RunBehaviour()
 				end
 			elseif (table.Count(self.infected) < self.MaxCommon and !dinfected:GetBool()) then 
 				if (math.random(1,16) == 1) then
-					for i=0,math.random(1,3) do
 						local bot = ents.Create(table.Random(zombie2))
 						bot:SetAngles(Angle(0,math.random(0,360),0))
 						bot:SetPos(self:GetPos())
@@ -616,7 +612,7 @@ function ENT:RunBehaviour()
 						end)
 						local thevictim = bot
 						if (math.random(1,3) == 1) then
-							for i=1,math.random(1,5) do
+							for i=1,math.random(1,8) do
 
 								local bot = ents.Create("infected")
 								bot:SetAngles(Angle(0,math.random(0,360),0))
@@ -627,14 +623,13 @@ function ENT:RunBehaviour()
 								--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 								table.insert(self.infected,bot)
 								table.insert(self.horde,bot)
-								print("Creating horde infected #"..bot:EntIndex())
+								print("Creating infected #"..bot:EntIndex())
 								timer.Simple(0.025, function()
 									bot.SearchRadius = 10000
 									bot.LoseTargetDist = 20000
 								end)
 							end
 						end
-					end
 					coroutine.wait(6)
 				end
 			end

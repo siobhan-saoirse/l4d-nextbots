@@ -453,7 +453,7 @@ function ENT:SetEnemy(ent)
 	timer.Stop("spitterPounce"..self:EntIndex())
 	timer.Stop("spitterPounceShred"..self:EntIndex())
 	if (ent != nil) then
-		if (ent:IsPlayer() and (self:GetEnemy():IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
+		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 		self.Idling = false
 	end
 	for k,v in ipairs(nearestNPC(self)) do
@@ -1263,8 +1263,8 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetDesiredSpeed( 210  )
+							self.loco:SetAcceleration(500 )
 						else
 							self.loco:SetDesiredSpeed(210)
 							self.loco:SetAcceleration(500)

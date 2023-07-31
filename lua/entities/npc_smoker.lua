@@ -461,7 +461,7 @@ function ENT:SetEnemy(ent)
 	timer.Stop("smokerPounce"..self:EntIndex())
 	timer.Stop("smokerPounceShred"..self:EntIndex())
 	if (ent != nil) then
-		if (ent:IsPlayer() and (self:GetEnemy():IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
+		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 		self.Idling = false
 	end
 	for k,v in ipairs(nearestNPC(self)) do
@@ -1148,7 +1148,7 @@ function ENT:Think()
 						self:SetEnemy(nil)
 						local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 						local anim = self:GetSequenceActivity(selanim)
-						self.MeleeAttackDelay = CurTime() + 1.0
+						self.MeleeAttackDelay = CurTime() + 1.1
 						self:AddGesture(anim)
 						self.loco:ClearStuck() 
 						self.DontWannaUseSameSequence = false
@@ -1168,7 +1168,7 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
@@ -1264,15 +1264,15 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 210 + (GetConVar("skill"):GetInt() * 35) )
-							self.loco:SetAcceleration(500 + (GetConVar("skill"):GetInt() * 35))
+							self.loco:SetDesiredSpeed( 210  )
+							self.loco:SetAcceleration(500 )
 						else
 							self.loco:SetDesiredSpeed(210)
 							self.loco:SetAcceleration(500)

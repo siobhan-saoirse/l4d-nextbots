@@ -459,7 +459,6 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 						if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready) then
 							if (IsValid(snd.Entity:GetEnemy())) then
 								v:SetEnemy(snd.Entity:GetEnemy())
-								
 							end
 						end
 					end
@@ -472,7 +471,7 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 		if (snd.Entity:GetClass() == "infected") then
 			if (string.find(snd.Entity:GetModel(),"clown")) then
 
-				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
+				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),800)) do
 					if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready) then
 						if (IsValid(snd.Entity:GetEnemy())) then
 							v:SetEnemy(snd.Entity:GetEnemy())
@@ -520,8 +519,9 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 		else
 
 			if ((snd.Entity:IsPlayer() || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
-				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
+				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),300)) do
 					if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET)) then
+						if (IsValid(v) and v:IsPlayer() and (v:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
 						v:SetEnemy(snd.Entity)
 						--v:EmitSound("L4D_Zombie.RageAtVictim")
 		
@@ -965,8 +965,12 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (IsValid(ent) and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
+	if (ent != nil and ent:IsNextBot() and !ent.IsAL4DZombie) then self.Enemy = nil return false end
+	if (ent != nil and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then self.Enemy = nil return false end
 	self.Enemy = ent
+	self.Pounced = false
+	timer.Stop("HunterPounce"..self:EntIndex())
+	timer.Stop("HunterPounceShred"..self:EntIndex())
 	if (ent != nil) then
 		self.Idling = false
 	end
@@ -993,6 +997,8 @@ function ENT:HaveEnemy()
 	if (GetConVar("ai_disabled"):GetBool()) then return false end 
 	if ( self:GetEnemy() and IsValid(self:GetEnemy()) ) then
 		-- If the enemy is too far
+		local ent = self:GetEnemy()
+		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return self:FindEnemy() end
 		if ( self:GetRangeTo(self:GetEnemy():GetPos()) > self.LoseTargetDist ) then
 			-- If the enemy is lost then call FindEnemy() to look for a new one
 			-- FindEnemy() will return true if an enemy is found, making this function return true
@@ -1560,6 +1566,10 @@ function ENT:Think()
 
 	end
 	if SERVER then 
+		local ent = self:GetEnemy()
+		if (IsValid(ent) and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then 
+			self.Enemy = nil
+		end
 		if (self.Ready) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),60)) do
 				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
@@ -2038,7 +2048,11 @@ function ENT:OnInjured( dmginfo )
 		end
 	end
 	if (dmginfo:GetAttacker() != nil) then
-		self:SetEnemy(dmginfo:GetAttacker())
+		local ent = dmginfo:GetAttacker()
+		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then 
+		else
+			self:SetEnemy(dmginfo:GetAttacker())
+		end
 	end
 	if (!self.flinchFinish) then
 		self:RestartGesture(self:GetSequenceActivity(self:LookupSequence("flinch_02")),true)
