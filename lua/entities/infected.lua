@@ -1623,7 +1623,7 @@ function ENT:Think()
 					end
 				end
 				self:PlaySequenceAndMove(anim)
-				timer.Simple(self:SequenceDuration(anim) - 0.2,function()
+				timer.Simple(self:SequenceDuration(anim) - 0.5,function()
 					if (self:IsOnGround()) then
 						if (self:GetEnemy() != nil) then
 							if (string.find(self:GetModel(),"mud")) then
@@ -1634,8 +1634,8 @@ function ENT:Think()
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
 							end
 						else
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) )
-							self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  )
+							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Running_to_Standing"))  ) )
+							self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Running_to_Standing"))  )
 						end
 					end
 				end)
@@ -1647,8 +1647,12 @@ function ENT:Think()
 		elseif (self.Ready and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
 
 			local mad = self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))
+			if (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_01"))) then
+				mad = self:GetSequenceActivity(self:LookupSequence("Running_to_Standing"))
+			end
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
+			self:PlaySequenceAndMove( mad2 )
 			self.Idling = true
 		end
 		if (!GetConVar("ai_disabled"):GetBool() and self.Ready) then
@@ -1883,9 +1887,15 @@ function ENT:ChaseEnemy( options )
 	path:Compute( self, self:GetEnemy():GetPos() )		-- Compute the path towards the enemies position
 	
 	if ( !path:IsValid() ) then return "failed" end
-
-	if (self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self:IsOnFire() and !self.PlayingSequence and !self.PlayingSequence2) then 
-			local mad = "violent_alert01_Common_"..table.Random({"a","b","c","d","e"})
+	
+	if (math.random(1,10) == 1 and self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self:IsOnFire() and !self.PlayingSequence and !self.PlayingSequence2) then 
+			local thetables = {
+				"violent_alert01_Common_"..table.Random({"a","b","c","d","e"}),
+				"Idle_Acquire_05",
+				"Idle_Acquire_06",
+				"Idle_Acquire_11",
+			}
+			local mad = table.Random(thetables)
 			self:PlaySequenceAndMove( mad ) 
 			self:EmitSound(table.Random({"L4D_Zombie.Alert"}))
 			timer.Simple(self:SequenceDuration(mad), function()
