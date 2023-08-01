@@ -779,6 +779,7 @@ function ENT:Initialize()
 	else
 		self:SetHealth(30) 
 	end
+	self:AddEffects(EF_NOINTERP)
 	if SERVER then
 		--[[
 		if (math.random(1,4) == 1) then

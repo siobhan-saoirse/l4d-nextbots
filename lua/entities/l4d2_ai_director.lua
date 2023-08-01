@@ -36,6 +36,14 @@ local function lookForNextPlayer(ply)
 end
 
 ENT.MusicTable = {
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
+	"Event.Zombat_B_11",
+	"Event.Zombat_A_11",
 	"Event.Zombat_1",
 	"Event.Zombat_2",
 	"Event.Zombat_3",

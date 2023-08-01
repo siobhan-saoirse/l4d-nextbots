@@ -1119,97 +1119,106 @@ function ENT:Think()
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
-						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
-							self:EmitSound("Vomit.Use")
+						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self) and !self.ReadyToVomit) then
+							self:EmitSound("BoomerZombie.Warn")
+							self.ReadyToVomit = true
+							self.PlayingSequence3 = true
+							timer.Simple(1, function()
+							
+								self:EmitSound("Vomit.Use")
 									
-							for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-								if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
-									self.loco:ClearStuck() 
-									local dmginfo = DamageInfo()
-									dmginfo:SetAttacker(self)
-									dmginfo:SetInflictor(self)
-									dmginfo:SetDamageType(bit.bor(DMG_ACID,DMG_POISON))
-									dmginfo:SetDamage(20)
-									if (GetConVar("skill"):GetInt() > 1) then
-										dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
-									end
-									v:TakeDamageInfo(dmginfo) 
-									v.AttractedToInfected = true
-									local plr = table.Random(lookForNextPlayer(self))
-									local thevictim = ents.Create("infected")
-									thevictim:SetAngles(Angle(0,math.random(0,360),0))
-									thevictim:SetOwner(self)
-									thevictim:Spawn()
-									thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-									local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 2000,type="hiding",stepup,stepup=800,stepdown=800})
-									if (pos != nil) then
-										thevictim:SetPos(pos)
-									end
-									--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-									print("Creating horde infected #"..thevictim:EntIndex())
-									timer.Simple(0.025, function()
-										thevictim.SearchRadius = 10000
-										thevictim.LoseTargetDist = 20000
-									end)
-									for i=1,8 do
-
-										local bot = ents.Create("infected")
-										bot:SetAngles(Angle(0,math.random(0,360),0))
-										bot:SetPos(thevictim:GetPos())
-										bot:SetOwner(self)
-										bot:Spawn()
-										bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
-										bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+								for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
+									if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
+										self.loco:ClearStuck() 
+										local dmginfo = DamageInfo()
+										dmginfo:SetAttacker(self)
+										dmginfo:SetInflictor(self)
+										dmginfo:SetDamageType(bit.bor(DMG_ACID,DMG_POISON))
+										dmginfo:SetDamage(20)
+										if (GetConVar("skill"):GetInt() > 1) then
+											dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
+										end
+										v:TakeDamageInfo(dmginfo) 
+										v.AttractedToInfected = true
+										local plr = table.Random(lookForNextPlayer(self))
+										local thevictim = ents.Create("infected")
+										thevictim:SetAngles(Angle(0,math.random(0,360),0))
+										thevictim:SetOwner(self)
+										thevictim:Spawn()
+										thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+										local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 2000,type="hiding",stepup,stepup=800,stepdown=800})
+										if (pos != nil) then
+											thevictim:SetPos(pos)
+										end
 										--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
-										bot.Enemy = v
-										print("Creating horde infected #"..bot:EntIndex())
+										print("Creating horde infected #"..thevictim:EntIndex())
 										timer.Simple(0.025, function()
-											bot.SearchRadius = 10000
-											bot.LoseTargetDist = 20000
+											thevictim.SearchRadius = 10000
+											thevictim.LoseTargetDist = 20000
 										end)
-									end
-									timer.Simple(15, function()
-										if (IsValid(v)) then
-											v.AttractedToInfected = true
+										for i=1,3 do
+	
+											local bot = ents.Create("infected")
+											bot:SetAngles(Angle(0,math.random(0,360),0))
+											bot:SetPos(thevictim:GetPos())
+											bot:SetOwner(self)
+											bot:Spawn()
+											bot:SetPos(thevictim:GetPos() + self:GetForward()*(math.random(150,300)) + self:GetRight()*(math.random(150,300)))
+											bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+											--bot:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+											bot.Enemy = v
+											print("Creating horde infected #"..bot:EntIndex())
+											timer.Simple(0.025, function()
+												bot.SearchRadius = 10000
+												bot.LoseTargetDist = 20000
+											end)
+										end
+										timer.Simple(15, function()
+											if (IsValid(v)) then
+												v.AttractedToInfected = true
+												if (v:IsPlayer()) then
+													v:SendLua("DrawMaterialOverlay( '', -0.06 )")
+												end
+											end
+										end)
+										if (v:IsPlayer()) then
+											v:SendLua("LocalPlayer():EmitSound('Event.VomitInTheFace')")
 											if (v:IsPlayer()) then
-												v:SendLua("DrawMaterialOverlay( '', -0.06 )")
+												v:SendLua("DrawMaterialOverlay( 'models/shadertest/shader4', -0.06 )")
 											end
 										end
-									end)
-									if (v:IsPlayer()) then
-										v:SendLua("LocalPlayer():EmitSound('Event.VomitInTheFace')")
-										if (v:IsPlayer()) then
-											v:SendLua("DrawMaterialOverlay( 'models/shadertest/shader4', -0.06 )")
-										end
 									end
 								end
-							end
-							ParticleEffectAttach("boomer_vomit_b", PATTACH_POINT_FOLLOW, self, 1 )
-							local anim = self:SelectRandomSequence(self:GetSequenceActivity(self:LookupSequence("Vomit_Attack")))
-							self.RangeAttackDelay = CurTime() + 60.0
-							self:AddGestureSequence(anim)
-							self.loco:ClearStuck() 
-							self:SetPoseParameter("move_x",0)
-							self:SetPoseParameter("move_y",0)
-							self.PlayingSequence3 = true
-											
-							timer.Simple(self:SequenceDuration(anim) - 0.2,function()	
-								self.PlayingSequence3 = false
-								if (self:IsOnGround() and self.Ready) then
-									if (self:GetEnemy() != nil) then
-										if (string.find(self:GetModel(),"mud")) then
-					
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-					
+								ParticleEffectAttach("boomer_vomit_b", PATTACH_POINT_FOLLOW, self, 1 )
+								local anim = self:SelectRandomSequence(self:GetSequenceActivity(self:LookupSequence("Vomit_Attack")))
+								self.RangeAttackDelay = CurTime() + 60.0
+								self:AddGestureSequence(anim)
+								self.loco:ClearStuck() 
+								self:SetPoseParameter("move_x",0)
+								self:SetPoseParameter("move_y",0)
+								self.PlayingSequence3 = true
+												
+								timer.Simple(self:SequenceDuration(anim) - 0.2,function()	
+									self.PlayingSequence3 = false
+									if (self:IsOnGround() and self.Ready) then
+										if (self:GetEnemy() != nil) then
+											if (string.find(self:GetModel(),"mud")) then
+						
+												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+						
+											else
+												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+											end
 										else
-											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+											--self:SetCycle(0)
+											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
+											self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
 										end
-									else
-										--self:SetCycle(0)
-										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) )
-										self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))  ) 
 									end
-								end
+								end)
+								timer.Simple(60, function()
+									self.ReadyToVomit = false
+								end)
 							end)
 						end 
 					end
@@ -1250,6 +1259,9 @@ function ENT:Think()
 		if (self.ContinueRunning or self.PlayingSequence2) then
 			self.PlayingSequence = false
 		end
+	end
+	if (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 1) then
+		self:SetEnemy(nil)
 	end
 	self:NextThink(CurTime())
 	return true
@@ -1538,7 +1550,7 @@ function ENT:OnKilled( dmginfo )
 										thevictim.SearchRadius = 10000
 										thevictim.LoseTargetDist = 20000
 									end)
-									for i=1,8 do
+									for i=1,3 do
 
 										local bot = ents.Create("infected")
 										bot:SetAngles(Angle(0,math.random(0,360),0))
