@@ -74,7 +74,7 @@ local function nearestPipebomb(ply)
 					table.insert(npcs, v)
 				end
 			else
-				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or ((v:IsPlayer() or v:IsNPC()) and v.AttractedToInfected)) then
+				if (((!string.find(v:GetClass(),"weapon_") and (string.find(v:GetClass(),"grenade") or string.find(v:GetClass(),"pipe") or string.find(v:GetClass(),"bomb")))) or ((v:IsPlayer() or v:IsNPC()) and v.AttractedToInfected and !v:IsFlagSet(FL_NOTARGET))) then
 					table.insert(npcs, v)
 				end
 			end
@@ -965,8 +965,8 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot() and !ent.IsAL4DZombie) then self.Enemy = nil return false end
-	if (ent != nil and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then self.Enemy = nil return false end
+	if (ent != nil and ent:IsNextBot() and !ent.IsAL4DZombie) then self.Grenade = nil self.Enemy = nil return false end 
+	if (ent != nil and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then self.Grenade = nil self.Enemy = nil return false end
 	self.Enemy = ent
 	self.Pounced = false
 	timer.Stop("HunterPounce"..self:EntIndex())
@@ -1442,6 +1442,10 @@ function ENT:RunBehaviour()
 			coroutine.yield()
 			return
 		end 
+		if (IsValid(self:GetEnemy()) and (self:GetEnemy():IsFlagSet(FL_NOTARGET))) then 
+			self.Grenade = nil
+			self.Enemy = nil
+		end
 		-- Lets use the above mentioned functions to see if we have/can find a enemy
 		if self.Ready and !self.ContinueRunning then 
 			
@@ -1565,11 +1569,11 @@ function ENT:Think()
 		end
 
 	end
+	if (IsValid(self:GetEnemy()) and (self:GetEnemy():IsFlagSet(FL_NOTARGET))) then 
+		self.Grenade = nil
+		self.Enemy = nil
+	end
 	if SERVER then 
-		local ent = self:GetEnemy()
-		if (IsValid(ent) and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then 
-			self.Enemy = nil
-		end
 		if (self.Ready) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),60)) do
 				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
@@ -1670,7 +1674,7 @@ function ENT:Think()
 						self.Door = v
 					end
 				end
-			end
+			end 
 			for k,v in ipairs(nearestPipebomb(self)) do
 				if (IsValid(v)) then
 					self.Grenade = v
@@ -1922,6 +1926,9 @@ function ENT:ChaseEnemy( options )
 					self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 				end
 			end
+		end
+		if (IsValid(self:GetEnemy()) and (self:GetEnemy():IsFlagSet(FL_NOTARGET))) then 
+			self.Enemy = nil
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
 			if (v ~= self and IsValid(v) and (v.IsInfected or v:GetClass() == "infected")) then

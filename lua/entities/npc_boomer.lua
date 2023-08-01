@@ -1151,7 +1151,7 @@ function ENT:Think()
 										thevictim.SearchRadius = 10000
 										thevictim.LoseTargetDist = 20000
 									end)
-									for i=1,30 do
+									for i=1,8 do
 
 										local bot = ents.Create("infected")
 										bot:SetAngles(Angle(0,math.random(0,360),0))
@@ -1538,7 +1538,7 @@ function ENT:OnKilled( dmginfo )
 										thevictim.SearchRadius = 10000
 										thevictim.LoseTargetDist = 20000
 									end)
-									for i=1,30 do
+									for i=1,8 do
 
 										local bot = ents.Create("infected")
 										bot:SetAngles(Angle(0,math.random(0,360),0))
