@@ -1215,7 +1215,7 @@ function ENT:Think()
 						self:SetEnemy(nil)
 						local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 						local anim = self:GetSequenceActivity(selanim)
-						self.MeleeAttackDelay = CurTime() + 1.0
+						self.MeleeAttackDelay = CurTime() + 1.1
 						self:AddGesture(anim)
 						self.loco:ClearStuck() 
 						self.DontWannaUseSameSequence = false
@@ -1238,7 +1238,7 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
@@ -1402,7 +1402,7 @@ function ENT:Think()
 							end
 							local selanim = self:LookupSequence("Melee_0"..math.random(1,3))
 							local anim = self:GetSequenceActivity(selanim)
-							self.MeleeAttackDelay = CurTime() + 1.0
+							self.MeleeAttackDelay = CurTime() + 1.1
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
