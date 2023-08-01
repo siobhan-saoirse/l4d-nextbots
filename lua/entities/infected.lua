@@ -1574,7 +1574,7 @@ function ENT:Think()
 		self.Enemy = nil
 	end
 	if SERVER then 
-		if (self.Ready) then
+		if (self.Ready and math.random(1,150) == 1) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),60)) do
 				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
 					self.PlayingSequence2 = false

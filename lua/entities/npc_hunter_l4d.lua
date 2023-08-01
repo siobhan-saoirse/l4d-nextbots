@@ -454,9 +454,18 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
+	if (self.Enemy != nil) then
+
+		local animent = self:GetEnemy().RagdollEntity
+		if (IsValid(animent)) then
+			animent:Remove()
+		end
+
+	end
 	if (ent != nil and ent:IsNextBot()) then return end
 	self.Enemy = ent
 	self.Pounced = false
+	
 	timer.Stop("HunterPounce"..self:EntIndex())
 	timer.Stop("HunterPounceShred"..self:EntIndex())
 	if (ent != nil) then
@@ -1221,6 +1230,36 @@ function ENT:Think()
 												if (self:GetEnemy():IsPlayer()) then
 													self:GetEnemy():StripWeapons()	
 												end
+												self:GetEnemy():SetNoDraw(true)
+												local animent = ents.Create( 'base_gmodentity' ) -- The entity used for the death animation	
+												animent:SetModel("models/survivors/anim_test.mdl")
+												animent:SetSkin(self:GetSkin())
+												animent:SetPos(self:GetPos())
+												animent:SetAngles(self:GetAngles() + Angle(0,180,0))
+												animent:Spawn()
+												animent:Activate()
+												self:GetEnemy().RagdollEntity = animent
+												animent:SetSolid( SOLID_OBB ) -- This stuff isn't really needed, but just for physics
+												animent:PhysicsInit( SOLID_OBB )
+												animent:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
+												animent:SetSequence( "Idle_Incap_Pounced" )
+												animent:SetPlaybackRate( 1 )
+												local animent2 = ents.Create( 'prop_dynamic_override' ) -- The entity used for the death animation	
+												animent2:SetModel(self:GetEnemy():GetModel())
+												animent2:SetSkin(self:GetEnemy():GetSkin())
+												animent2:SetPos(self:GetEnemy():GetPos())
+												animent2:SetAngles(self:GetEnemy():GetAngles())
+												animent2:SetParent(animent)
+												animent2:AddEffects(EF_BONEMERGE)
+												function animent:Think() -- This makes the animation work
+													if (self:GetCycle() == 1) then
+														self:SetCycle(0)
+													end
+													self:NextThink( CurTime() )
+													return true
+												end
+												self:GetEnemy().RagdollEntity2 = animent2
+												animent.AutomaticFrameAdvance = true
 												timer.Stop("HunterPounce"..self:EntIndex())
 												timer.Stop("HunterPounceShred"..self:EntIndex())
 												timer.Create("HunterPounceShred"..self:EntIndex(), 0.8, 0, function()
@@ -1442,12 +1481,23 @@ function ENT:OnInjured( dmginfo )
 			self.Pounced = false
 		end
 		local anim = self:LookupSequence(selanim)
+		local anim2 = self:LookupSequence("GetUpFrom_Pounced")
 		self:PlaySequenceAndMove(anim)
 		if (self:GetEnemy():IsPlayer()) then
 			self:GetEnemy():SetMoveType(MOVETYPE_WALK)
 		else
 			self:GetEnemy():SetMoveType(MOVETYPE_STEP)
 		end 
+		
+		animent:ResetSequence(anim2)
+		timer.Stop("HunterPounce"..self:EntIndex())
+		timer.Stop("HunterPounceShred"..self:EntIndex())
+		local animent = self:GetEnemy().RagdollEntity
+		timer.Stop("ShovedFinish"..animent:EntIndex())
+		timer.Create("ShovedFinish"..animent:EntIndex(), self:SequenceDuration(anim2) - 0.2, 1,function()
+			animent:Remove()
+		end)
+		
 		timer.Stop("ShovedFinish"..self:EntIndex())
 		timer.Create("ShovedFinish"..self:EntIndex(), self:SequenceDuration(anim) - 0.2, 1,function()
 			if (self:IsOnGround() and self.Ready) then

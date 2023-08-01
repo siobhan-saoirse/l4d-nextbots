@@ -79,8 +79,9 @@ ENT.MusicTable = {
 }
 
 ENT.MusicTable2 = {
-	"Event.Zombat3_A_Mall",
-	"Event.Zombat3_B_Mall"
+	--"Event.Zombat3_A_Mall",
+	--"Event.Zombat3_B_Mall"
+	"common/null.wav"
 }
 list.Set( "NPC", "ai_director", {
 	Name = ENT.PrintName,
