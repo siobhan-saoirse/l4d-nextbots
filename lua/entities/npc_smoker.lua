@@ -496,10 +496,10 @@ function ENT:HaveEnemy()
 		elseif (self:GetEnemy():IsNextBot()) then
 			return self:FindEnemy()
 		elseif (engine.ActiveGamemode() == "teamfortress") then
-			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
+			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
 				return self:FindEnemy()
 			end	 
-		elseif (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
+		elseif (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 			return self:FindEnemy()
 		end
 		-- The enemy is neither too far nor too dead so we can return true
@@ -894,7 +894,7 @@ end)
 function ENT:RunBehaviour()
 	-- This function is called when the entity is first spawned. It acts as a giant loop that will run as long as the NPC exists
 	while ( true ) do
-		if (self:Health() < 1) then
+		if (self:Health() < 0) then
 			coroutine.yield()
 			return
 		end 
@@ -1012,7 +1012,7 @@ function ENT:Think()
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
 			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
-			if (self:GetEnemy():Health() < 1 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
+			if (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
 		end
@@ -1118,7 +1118,7 @@ function ENT:Think()
 			self:TakeDamageInfo(dmginfo) 
 		end
 	end 
-	if (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 1) then
+	if (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 0) then
 		self.Enemy = nil
 		self:FindEnemy()
 	end
@@ -1279,7 +1279,7 @@ function ENT:Think()
 						end
 					end
 				end
-			elseif (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 1) then
+			elseif (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 0) then
 				self:SetEnemy(nil)
 			end
 		end

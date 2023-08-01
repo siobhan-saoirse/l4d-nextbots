@@ -275,7 +275,7 @@ function ENT:Think()
 	end
 	if SERVER then
 		for k,v in ipairs(self.horde) do
-			if (!IsValid(v) or v:Health() < 1) then
+			if (!IsValid(v) or v:Health() < 0) then
 				table.remove(self.horde,k)
 			end
 		end
