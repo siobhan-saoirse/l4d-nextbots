@@ -978,7 +978,7 @@ function ENT:RunBehaviour()
 						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
-						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400, 1 ) -- Walk to a random 
+						self:MoveToPos(self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400)
 						self.Walking = true 
 					else
 						if (self:GetCycle() == 1 and self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
@@ -1228,7 +1228,7 @@ function ENT:Think()
 			if (IsValid(self:GetEnemy()) and self:IsOnGround() and !self.PlayingSequence3 and !self.PlayingSequence2) then
 				if (!self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
-					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
+					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay) and !self.Pounced) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)

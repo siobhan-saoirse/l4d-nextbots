@@ -966,8 +966,9 @@ function ENT:RunBehaviour()
 		end 
 		-- Lets use the above mentioned functions to see if we have/can find a enemy
 		if self.Ready and !self.ContinueRunning then 
-			
-			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
+			if (self.Pouncing) then
+				self:MoveToPos(self:GetPos() + self:GetForward() * -500)
+			elseif ( !self.Pouncing and !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
 				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_upper_knife"))) then
 					self.PlayingSequence2 = false	
@@ -986,7 +987,8 @@ function ENT:RunBehaviour()
 						local act = self:GetSequenceActivity(self:LookupSequence("charger_walk"))
 						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 250 * 0.5 )
-						self.loco:Approach( self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400, 1 ) -- Walk to a random 
+						self:MoveToPos(self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400)
+						self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) ) 
 						self.Walking = true 
 					else
 						if (self:GetCycle() == 1 and self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("charger_walk"))) then
@@ -1003,7 +1005,7 @@ function ENT:RunBehaviour()
 			if (self.ContinueRunning) then
 				-- Now that we have an enemy, the code in this block will run
 				--self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				self.loco:Approach( self:GetEnemy():GetPos() ) -- Walk to a random place within about 400 units (yielding)
+				self.loco:Approach( self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_upper_knife")) )  ) -- Walk to a random place within about 400 units (yielding)
 				-- Now once the above function is finished doing what it needs to do, the code will loop back to the start
 				-- unless you put stuff after the if statement. Then that will be run before it loops
 			end
@@ -1261,12 +1263,14 @@ function ENT:Think()
 							self.Pouncing = true
 							local act = self:GetSequenceActivity(self:LookupSequence("charger_charge"))
 							self:StartActivity( act )
+							self:ResetSequence( self:SelectWeightedSequence(act) )
 							self:EmitSound("ChargerZombie.Charge")
-							self.loco:Approach( self:GetPos() + self:GetForward() * -500, 1 ) -- Walk to a random 
 							self.Ready = false
 							timer.Simple(3, function()
 								if (!self.Charged2) then
 									self.Ready = true
+									local act = self:GetSequenceActivity(self:LookupSequence("charger_run"))
+									self:StartActivity( act )
 									timer.Stop("WaitUntilIPouncedonMyEnemy"..self:EntIndex()) 
 								end
 							end)
@@ -1277,7 +1281,6 @@ function ENT:Think()
 								if (self:IsOnGround() and !self.Pounced) then
 									self.loco:SetDesiredSpeed( 250 * 2 )
 									self.loco:SetAcceleration( 500 * 2 )
-									self.loco:Approach( self:GetPos() + self:GetForward() * 500, 1 ) -- Walk to a random 
 									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
 										if (v:EntIndex() == self.Enemy:EntIndex()) then
 											if (!self.Charged) then

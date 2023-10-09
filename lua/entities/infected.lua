@@ -91,7 +91,7 @@ ENT.Spawnable		= false
 ENT.IsAL4DZombie = true
 ENT.AttackDelay = 50
 ENT.AttackDamage = 3
-ENT.AttackRange = 75
+ENT.AttackRange = 50
 ENT.AttackRange2 = 190
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
@@ -822,7 +822,7 @@ function ENT:Initialize()
 		--self:SetBodygroup(1,math.random(1,2))
 		
 		local mad = self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))
-		self:StartActivity( mad )
+		--self:StartActivity( mad )
 		self:PlayActivityAndMove( mad )
 		timer.Simple(1, function()
 		
@@ -1652,7 +1652,7 @@ function ENT:Think()
 				mad = self:GetSequenceActivity(self:LookupSequence("Running_to_Standing"))
 			end
 			local mad2 = self:SelectRandomSequence(mad) 
-			self:StartActivity( mad )
+			--self:StartActivity( mad )
 			self:PlaySequenceAndMove( mad2 )
 			self.Idling = true
 		end
@@ -1899,7 +1899,8 @@ function ENT:ChaseEnemy( options )
 			local mad = table.Random(thetables)
 			self:PlaySequenceAndMove( mad ) 
 			self:EmitSound(table.Random({"L4D_Zombie.Alert"}))
-			timer.Simple(self:SequenceDuration(mad), function()
+			timer.Stop("Sequuence"..self:EntIndex())
+			timer.Create("Sequuence"..self:EntIndex(), self:SequenceDuration(mad), 1, function()
 				if (!self:IsOnFire()) then
 					if (string.find(self:GetModel(),"mud")) then
 	
@@ -2035,7 +2036,9 @@ function ENT:OnInjured( dmginfo )
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
 		self:EmitSound("L4D_Zombie.Shoved")
-		timer.Simple(self:SequenceDuration(anim) - 0.2,function()
+		
+			timer.Stop("Sequuence"..self:EntIndex())
+			timer.Create("Sequuence"..self:EntIndex(), self:SequenceDuration(anim), 1, function()
 			if (self:IsOnGround() and self.Ready) then
 				if (self:GetEnemy() != nil) then
 					if (string.find(self:GetModel(),"mud")) then
