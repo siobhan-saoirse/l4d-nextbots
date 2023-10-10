@@ -172,7 +172,14 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 					snd.SoundLevel = 95
 				end
 			snd.Pitch = math.random(95,105)
-			return true
+			if (snd.Entity.NextStepSound && snd.Entity.NextStepSound > CurTime()) then
+				return false
+			else
+				timer.Simple(0.01, function()
+					snd.Entity.NextStepSound = CurTime() + math.Rand(0.12,0.15)
+				end)
+				return true
+			end
 		end
 		if ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
 			for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
@@ -990,7 +997,7 @@ function ENT:RunBehaviour()
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
-				self.loco:SetAcceleration(150)
+				self.loco:SetAcceleration(500)
 				self:ChaseEnemy()
 			else
 				-- Since we can't find an enemy, lets wander
@@ -1097,7 +1104,7 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end
@@ -1559,6 +1566,9 @@ local deathanimtbl =
 {
 
 	"death",
+	"death",
+	"death",
+	"Death_Running_07",
 
 }
 
@@ -1612,36 +1622,6 @@ function ENT:OnKilled( dmginfo )
 		
 		self.Ready = false
 		local death = table.Random(deathanimtbl)
-		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		if (string.find(self:GetModel(),"female") and !string.find(self:GetModel(),"formal") and !string.find(self:GetModel(),"_tshirt_skirt") and !string.find(self:GetModel(),"_tanktop_jeans")) then
-			death = table.Random(deathanimfemaletbl)
-			death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		elseif (dmginfo:IsDamageType(DMG_BUCKSHOT) && !string.find(self:GetModel(),"female") || string.find(self:GetModel(),"formal")) then
-			death = table.Random(deathbyshotgunanimtbl)
-			death2 = self:GetSequenceActivity(self:LookupSequence(death))
-		end
-		if (!dmginfo:IsDamageType(DMG_BUCKSHOT) and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_4"))) then
-			if (string.find(self:GetModel(),"female") and !string.find(self:GetModel(),"formal") and !string.find(self:GetModel(),"_tshirt_skirt") and !string.find(self:GetModel(),"_tanktop_jeans")) then
-				death = table.Random(deathanimfemaletblrun)
-				death2 = self:GetSequenceActivity(self:LookupSequence(death))
-			else
-				death = table.Random(deathanimtblrun)
-				death2 = self:GetSequenceActivity(self:LookupSequence(death))
-			end
-			self.ContinueRunning = true
-			--self.loco:SetDesiredSpeed(150)
-			--self.loco:SetAcceleration(500)
-		else
-			if (dmginfo:IsDamageType(DMG_BUCKSHOT)) then
-				self.ContinueRunning = true
-				--self.loco:SetDesiredSpeed(150)
-				--self.loco:SetAcceleration(500)
-			else
-				self.ContinueRunning = false
-				--self.loco:SetDesiredSpeed(0)
-				--self.loco:SetAcceleration(0)
-			end
-		end
 		self.Ready = false
 		self:PlaySequenceAndMove(self:LookupSequence(death))
 			timer.Stop("Dying"..self:EntIndex())

@@ -897,7 +897,7 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end
@@ -1345,11 +1345,11 @@ function ENT:OnKilled( dmginfo )
 					fire:SetOwner(self)
 					fire:SetPos(self:GetPos())
 					--no glow + delete when out + start on + last forever
-					fire:SetKeyValue("spawnflags", tostring(128 + 32 + 4 + 2 + 1))
+					fire:SetKeyValue("spawnflags", tostring(128 + 32 + 4 + 2))
 					fire:SetKeyValue("firesize", "100")
 					fire:SetKeyValue("fireattack", 1)
-					fire:SetKeyValue("health", "999")
-					fire:SetKeyValue("damagescale", "10") -- only neg. value prevents dmg
+					fire:SetKeyValue("health", "10")
+					fire:SetKeyValue("damagescale", "3") -- only neg. value prevents dmg
 				 
 					fire:Spawn()
 					fire:Activate()

@@ -6,7 +6,6 @@ if CLIENT then
 end
 local function getAllInfected()
 	local npcs = {}
-	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
 			if (v:GetClass() == "infected") then
 				if (v:Health() > 0) then
@@ -14,7 +13,6 @@ local function getAllInfected()
 				end
 			end
 		end
-	end
 	return npcs
 end
 local function lookForNextPlayer(ply)
@@ -38,6 +36,16 @@ local function lookForNextPlayer(ply)
 		end
 	end
 	return npcs
+end
+
+local function isbeingMobbed(ply)
+	local npcs = {}
+		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 200 )) do
+			if (v:GetClass() == "infected") then
+				table.insert(npcs,v)
+			end
+		end
+	return table.Count(npcs) > 10  
 end
 local function nearestNPC(ply)
 	local npcs = {}
@@ -327,6 +335,9 @@ local modeltbl = {
 	"models/infected/common_male_clown.mdl",
 	"models/infected/common_male_clown.mdl",
 	"models/infected/common_male_clown.mdl",
+	"models/infected/common_male_clown.mdl",
+	"models/infected/common_male_clown.mdl",
+	"models/infected/common_male_clown.mdl",
 	"models/infected/common_male_formal.mdl",
 	"models/infected/common_male_jimmy.mdl",
 	--"models/infected/common_male_ceda_l4d1.mdl",
@@ -354,6 +365,7 @@ local modeltbl = {
 	"models/infected/common_test.mdl"
 }
 
+hook.Remove("EntityEmitSound","InfectedHearSound")
 hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 	if (IsValid(snd.Entity)) then
 		if IsValid(snd.Entity) and snd.Entity:GetModel() and string.StartWith(snd.Entity:GetModel(), "models/infected/common_") and string.find(snd.SoundName, "step") then
@@ -384,6 +396,13 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 				if (snd.Entity:WaterLevel() < 1) then
 					snd.SoundName = "player/footsteps/clown/concrete"..math.random(1,8)..".wav"
 					snd.Volume = 1
+					for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),1200)) do
+						if (v:GetClass() == "infected") then
+							if (IsValid(snd.Entity:GetEnemy())) then 
+								v:SetEnemy(snd.Entity:GetEnemy())
+							end
+						end
+					end
 				elseif (snd.Entity:WaterLevel() < 2) then
 					snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/boomer/run/wade"..math.random(1,4)..".wav")
 					snd.Volume = 1
@@ -452,72 +471,9 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 					snd.Volume = 1
 				end
 			end
-			if (snd.Entity:GetClass() == "infected") then
-				if (string.find(snd.Entity:GetModel(),"clown")) then
-
-					for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),800)) do
-						if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready) then
-							if (IsValid(snd.Entity:GetEnemy())) then
-								v:SetEnemy(snd.Entity:GetEnemy())
-							end
-						end
-					end
-
-				end
-			end
 			snd.Pitch = math.random(95,105)
 			return true
 		end
-		if (snd.Entity:GetClass() == "infected") then
-			if (string.find(snd.Entity:GetModel(),"clown")) then
-
-				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),800)) do
-					if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready) then
-						if (IsValid(snd.Entity:GetEnemy())) then
-							v:SetEnemy(snd.Entity:GetEnemy())
-							--v:EmitSound("L4D_Zombie.RageAtVictim")
-						end
-					end
-				end
-
-			end
-		end
-		if (engine.ActiveGamemode() == "teamfortress") then
-			if (snd.Entity:IsTFPlayer() and !snd.Entity:IsNextBot()) then
-				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
-					if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready) then
-						v:SetEnemy(snd.Entity)
-						--v:EmitSound("L4D_Zombie.RageAtVictim")
-		
-						if SERVER then
-							--[[
-	local anim = v:LookupSequence("exp_angry_0"..math.random(1,6))
-							--v:AddGestureSequence(anim,true)]]
-						end
-		
-						timer.Stop("IdleExpression"..v:EntIndex())
-						timer.Stop("AngryExpression"..v:EntIndex())
-						timer.Create("AngryExpression"..v:EntIndex(), 3, 0, function()
-							
-							if SERVER then
-								local anim = v:LookupSequence("exp_angry_0"..math.random(1,6))
-								--v:AddGestureSequence(anim,true)
-							end
-		
-							timer.Adjust("AngryExpression"..v:EntIndex(),v:SequenceDuration(anim) - 0.2)
-						end)
-						if SERVER then
-							for _,npc in ipairs(ents.GetAll()) do
-								if npc:IsNPC() then
-									npc:AddEntityRelationship(v,D_HT,99)
-								end
-							end
-						end
-					end
-				end
-			end
-		else
-
 			if ((snd.Entity:IsPlayer() || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
 				for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),300)) do
 					if (v:GetClass() == "infected" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET)) then
@@ -552,7 +508,6 @@ hook.Add("EntityEmitSound","InfectedHearSound",function(snd)
 					end
 				end
 			end
-		end
 	end
 end)
 function ENT:IsNPC()
@@ -634,8 +589,10 @@ function ENT:PlaySequenceAndMove(seq, options, callback)
 			vec = Vector(vec.x, vec.y, vec.z)
 			vec:Rotate(self:GetAngles() + angles)	
 			self:SetAngles(self:LocalToWorldAngles(angles))
+			if (self:IsInWorld() and self:IsOnGround()) then
 				previousPos = self:GetPos() + vec*self:GetModelScale()
 				self:SetPos(previousPos)
+			end
 		end
 		previousCycle = cycle
 		if isfunction(callback) then return callback(self, cycle) end
@@ -729,6 +686,7 @@ end
 function ENT:PlayActivityAndMove(act, options, callback)
 	if (act == -1) then ErrorNoHalt("What the FUCK why is there no ACT for this sequence???") return end
 	local seq = self:SelectRandomSequence(act)
+	self:StartActivity(act)
 	return self:PlaySequenceAndMove(seq, options, callback)
 end
 
@@ -772,7 +730,7 @@ function ENT:Initialize()
 			end
 		end
 	end
-	self.LoseTargetDist	= 3200	-- How far the enemy has to be before we lose them
+	self.LoseTargetDist	= 25000	-- How far the enemy has to be before we lose them
 	self.SearchRadius 	= 200	-- How far to search for enemies
 	if (string.find(self:GetModel(),"jimmy")) then
 		self:SetHealth(200) 
@@ -802,7 +760,7 @@ function ENT:Initialize()
 		self:SetCollisionGroup(COLLISION_GROUP_NPC)
 		self:AddFlags(FL_OBJECT)
 		self:AddFlags(FL_NPC)
-		self:SetSkin(math.random(0,self:SkinCount()-1))
+		self:SetSkin(math.random(0,self:SkinCount()-1)) 
 		if (table.Count(getAllInfected()) > 30) then
 			self:Remove()
 		end
@@ -822,9 +780,8 @@ function ENT:Initialize()
 		--self:SetBodygroup(1,math.random(1,2))
 		
 		local mad = self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))
-		--self:StartActivity( mad )
-		self:PlayActivityAndMove( mad )
-		timer.Simple(1, function()
+		self:StartActivity( mad )
+		timer.Simple(0.1, function()
 		
 			self.Ready = true
 
@@ -956,6 +913,9 @@ end
 function ENT:OnRemove()
 	timer.Stop("IdleExpression"..self:EntIndex())
 	timer.Stop("AngryExpression"..self:EntIndex())
+							if (self.MobbedMusic != nil) then
+								self.MobbedMusic:FadeOut(2)
+							end
 	if (IsValid(self.bullseye)) then
 		self.bullseye:Remove()
 	end
@@ -968,6 +928,10 @@ end
 function ENT:SetEnemy(ent)
 	if (ent != nil and ent:IsNextBot() and !ent.IsAL4DZombie) then self.Grenade = nil self.Enemy = nil return false end 
 	if (ent != nil and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then self.Grenade = nil self.Enemy = nil return false end
+	if (IsValid(self.Enemy)) then
+		self:GetEnemy():StopSound("Event.Mobbed")
+		self.Enemy.IsMobbed = false
+	end
 	self.Enemy = ent
 	self.Pounced = false
 	timer.Stop("HunterPounce"..self:EntIndex())
@@ -1030,7 +994,6 @@ function ENT:HaveEnemy()
 				--self:SetCycle(0)
 				if (!self.Idling) then
 					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) )
-					self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) 
 					self.Idling = true
 				end
 			end
@@ -1111,11 +1074,6 @@ function ENT:FindEnemy()
 					end
 
 					if SERVER then
-						for _,npc in ipairs(ents.FindByClass("npc_*")) do
-
-							npc:SetEnemy(self)
-
-						end
 						local anim = self:LookupSequence("exp_angry_0"..math.random(1,6))
 						self:AddGestureSequence(anim,true)
 					end
@@ -1231,7 +1189,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					dmginfo:SetAttacker(self)
 					dmginfo:SetInflictor(self)
 					dmginfo:SetDamageType(DMG_CLUB)
-					dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
+					dmginfo:SetDamage(math.random(1,4))
 					if (GetConVar("skill"):GetInt() > 1) then
 						dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 					end
@@ -1268,7 +1226,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					dmginfo:SetAttacker(self)
 					dmginfo:SetInflictor(self)
 					dmginfo:SetDamageType(DMG_CRUSH)
-					dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
+					dmginfo:SetDamage(math.random(1,4))
 					if (GetConVar("skill"):GetInt() > 1) then
 						dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 					end
@@ -1283,7 +1241,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						else
 							local v = self:GetEnemy()
 							v:EmitSound("Weapon.HitInfected")
-							local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
+							local selanim = table.Random({"Shoved_Backward_01","Shoved_Backward_02"})
 							local anim = v:LookupSequence(selanim)
 							v:PlaySequenceAndMove(anim)
 							v:EmitSound("L4D_Zombie.Shoved")
@@ -1307,7 +1265,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 							end)
 							
 							self:EmitSound("Weapon.HitInfected")
-							local selanim = table.Random({"Run_Stumble_01","Shoved_Backward_01","Shoved_Backward_02","Shoved_Backward_03","Shoved_Forward_01","Shoved_Leftward_01","Shoved_Rightward_01"})
+							local selanim = table.Random({"Shoved_Backward_01","Shoved_Backward_02"})
 							local anim = self:LookupSequence(selanim)
 							self:PlaySequenceAndMove(anim)
 							self:EmitSound("L4D_Zombie.Shoved")
@@ -1458,7 +1416,10 @@ function ENT:RunBehaviour()
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
-				self.loco:SetAcceleration(150)
+				self.loco:SetAcceleration(1000)
+				if (!self.PlayingSequence2 and !self.PlayingSequence3) then
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )
+				end
 				self:ChaseEnemy()
 			else
 				-- Since we can't find an enemy, lets wander
@@ -1557,6 +1518,50 @@ function ENT:BodyUpdate()
 end
 
 function ENT:Think()
+	if SERVER then
+	
+		if (table.Count(getAllInfected()) > 30) then
+			self:Remove()
+		end
+		
+		if (IsValid(self:GetEnemy())) then
+					if (isbeingMobbed(self:GetEnemy())) then
+						if (!self:GetEnemy().IsMobbed) then
+							self.MobbedMusic = CreateSound(self:GetEnemy(),"Event.Mobbed")
+							self.MobbedMusic:Play()
+							self:GetEnemy().IsMobbed = true
+						end
+					else
+						if (self:GetEnemy().IsMobbed) then
+							if (self.MobbedMusic != nil) then
+								self.MobbedMusic:FadeOut(2)
+							end
+							self:GetEnemy().IsMobbed = false
+						end
+					end
+		end
+	end
+					if (SERVER and !self:IsInWorld()) then
+						if (math.random(1,20) == 1) then
+							local dmginfo = DamageInfo()
+							self:OnKilled(dmginfo)
+						end
+					end
+					
+					if (math.random(1,100) == 1 and IsValid(self:GetEnemy()) and string.find(self:GetModel(),"clown")) then
+							
+						local thevictim = ents.Create("infected")
+						thevictim:SetAngles(Angle(0,math.random(0,360),0))
+						thevictim:SetOwner(self)
+						thevictim:Spawn()
+						thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
+						local pos = thevictim:FindSpot("random", {pos=self:GetEnemy():GetPos(),radius = 8000,type="hiding",stepup,stepup=800,stepdown=800})
+						if (pos != nil) then
+							thevictim:SetPos(pos)
+						end
+						thevictim:SetEnemy(self:GetEnemy())
+						print("Spawning incoming infected")
+					end
 	if (self.PlayingSequence2) then
 
 		local cycle = self:GetCycle()
@@ -1577,15 +1582,12 @@ function ENT:Think()
 	if SERVER then 
 		if (self.Ready and math.random(1,150) == 1) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),60)) do
-				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex()) then
+				if (v:GetClass() == "infected" and self.Enemy == nil and v:EntIndex() != self:EntIndex() and (math.random(1,100) == 1)) then
 					self.PlayingSequence2 = false
 					self.PlayingSequence3 = false
 					self:SetEnemy(v)
 				end
 			end
-		end
-		if (table.Count(getAllInfected()) > 30) then
-			self:Remove()
 		end
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
@@ -1595,11 +1597,11 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end
-		if (self.Idling and self:GetCycle() == 1) then
+		if (self.Idling and self:GetCycle() == 0.9) then
 			self:SetCycle(0)
 			self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))  ) 
 		end
@@ -1633,6 +1635,7 @@ function ENT:Think()
 	
 							else
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
+								self:StartActivity(self:GetSequenceActivity(self:LookupSequence("run_01")))
 							end
 						else
 							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Running_to_Standing"))  ) )
@@ -1851,10 +1854,10 @@ function ENT:Think()
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
 							self.loco:SetDesiredSpeed( 300  )
-							self.loco:SetAcceleration(500 )
+							self.loco:SetAcceleration(1000 )
 						else
 							self.loco:SetDesiredSpeed(300 * self:GetModelScale())
-							self.loco:SetAcceleration(500 * self:GetModelScale())
+							self.loco:SetAcceleration(1000 * self:GetModelScale())
 						end
 					end
 				end
@@ -1889,7 +1892,7 @@ function ENT:ChaseEnemy( options )
 	
 	if ( !path:IsValid() ) then return "failed" end
 	
-	if (math.random(1,10) == 1 and self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self:IsOnFire() and !self.PlayingSequence and !self.PlayingSequence2) then 
+	if (math.random(1,30) == 1 and self:Health() > 0 and !self.HaventLandedYet and !self.EncounteredEnemy and !self:IsOnFire() and !self.PlayingSequence and !self.PlayingSequence2) then 
 			local thetables = {
 				"violent_alert01_Common_"..table.Random({"a","b","c","d","e"}),
 				"Idle_Acquire_05",
@@ -1899,6 +1902,7 @@ function ENT:ChaseEnemy( options )
 			local mad = table.Random(thetables)
 			self:PlaySequenceAndMove( mad ) 
 			self:EmitSound(table.Random({"L4D_Zombie.Alert"}))
+			
 			timer.Stop("Sequuence"..self:EntIndex())
 			timer.Create("Sequuence"..self:EntIndex(), self:SequenceDuration(mad), 1, function()
 				if (!self:IsOnFire()) then
@@ -1923,9 +1927,11 @@ function ENT:ChaseEnemy( options )
 					if (string.find(self:GetModel(),"mud")) then
 
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+						self:StartActivity(self:GetSequenceActivity(self:LookupSequence("mudguy_run")))
 
 					else
 						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
+						self:StartActivity(self:GetSequenceActivity(self:LookupSequence("run_01")))
 					end
 				end
 			end

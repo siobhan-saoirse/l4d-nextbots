@@ -1009,7 +1009,7 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end
@@ -1171,80 +1171,91 @@ function ENT:Think()
 						self:SetPoseParameter("move_y",0)
 					end
 				end
-				--[[
+				
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
+								
+							self:EmitSound("SpitterZombie.Spit")
+							self.RangeAttackDelay = CurTime() + 30.0
+							self:PlaySequenceAndMove("spitter_spitting")
+							local slef = self
+											
+							local p = ents.Create("base_anim")
+							p:SetModel("models/gibs/hgibs.mdl")
+							p:SetPos(self:GetPos() + Vector(0,0,80))
+							p:SetAngles(self:GetAngles())
+							p:SetCollisionGroup(COLLISION_GROUP_NPC)
+							p:PhysicsInit(SOLID_VPHYSICS)
+							p:SetOwner(self)
+							p:Spawn()
+							 
 							local shouldvegoneforthehead = self:GetEnemy():EyePos()
 							local bone = 1
 							shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
 							local vel = ((shouldvegoneforthehead - self:EyePos()) * 8):Angle()
 							vel.p = vel.p
-							vel = vel:Forward() * (1800 * self:GetPos():Distance(self:GetEnemy():GetPos())) + Vector(0,0,120 + self:GetPos():Distance(self:GetEnemy():GetPos()))
+							vel = vel:Forward() * 1800 -- * (self:GetPos():Distance(self:GetEnemy():GetPos()) * 0.007)
 					
-							self.Pouncing = true
-							self.loco:JumpAcrossGap(self:GetEnemy():GetPos(), vel)
-							timer.Create("WaitUntilIPouncedonMyEnemy"..self:EntIndex(), 0, 0, function()
-								if (self:IsOnGround() and !self.Pounced) then
-									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-										if (v:EntIndex() == self:GetEnemy():EntIndex()) then
-											if (!self.Pounced) then
-
-												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
-													self:SetCollisionGroup(COLLISION_GROUP_NPC)
-												end
-												self:EmitSound("spitterZombie.Ride")
-												local selanim = self:LookupSequence("spitter_ride")
-												local anim = self:GetSequenceActivity(selanim)
-												self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
-												self:PlaySequenceAndMove(selanim)
-												self:GetEnemy():SetMoveType(MOVETYPE_NONE)
-												if (self:GetEnemy():IsPlayer()) then
-													self:GetEnemy():StripWeapons()	
-												end
-												timer.Stop("spitterPounce"..self:EntIndex())
-												timer.Stop("spitterPounceShred"..self:EntIndex())
-												timer.Create("spitterPounce"..self:EntIndex(), 1.0, 0, function()
-													local dmginfo = DamageInfo()
-													dmginfo:SetAttacker(self)
-													dmginfo:SetInflictor(self)
-													dmginfo:SetDamageType(DMG_SLASH)
-													dmginfo:SetDamage(6)
-													self:GetEnemy():TakeDamageInfo(dmginfo)
-													self:GetEnemy():EmitSound("PlayerZombie.AttackHit")
-												end)
-												self.loco:ClearStuck() 
-												self.DontWannaUseSameSequence = false
-												self.Pounced = true
-											end
-
-										end
-									end
-									self.Pouncing = false
-									timer.Stop("WaitUntilIPouncedonMyEnemy"..self:EntIndex()) 
-								end
-							end)
-							if (self.Pounced) then
-
-								if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
-									self:SetCollisionGroup(COLLISION_GROUP_NPC)
-								end
-								local selanim = self:LookupSequence("spitter_ride")
-								local anim = self:GetSequenceActivity(selanim)
-								self.RangeAttackDelay = CurTime() + self:SequenceDuration(selanim)
-								self:PlaySequenceAndMove(selanim)
-								self:GetEnemy():SetMoveType(MOVETYPE_NONE)
-								if (self:GetEnemy():IsPlayer()) then
-									self:GetEnemy():StripWeapons()	
-								end
-								self.loco:ClearStuck() 
-								self.DontWannaUseSameSequence = false
-
+							
+							local phys = p:GetPhysicsObject() 
+							if phys then
+								p:GetPhysicsObject():AddVelocity(vel)
+								p:SetPhysicsAttacker(self)
 							end
+							
+							function p:PhysicsCollide( data, phys )
+								if ( data.Speed > 90 ) then 
+										local fire2 = ents.Create("env_fire")
+										if not IsValid(fire2) then return end
+									 
+										fire2:SetOwner(slef)
+										fire2:SetPos(self:GetPos())
+										--no glow + delete when out + start on + last forever
+										fire2:SetKeyValue("spawnflags", tostring(128 + 32 + 4 + 2))
+										fire2:SetKeyValue("firesize", "100")
+										fire2:SetKeyValue("fireattack", 1)
+										fire2:SetKeyValue("health", "8")
+										fire2:SetKeyValue("damagescale", "3") -- only neg. value prevents dmg
+									 
+										fire2:Spawn()
+										fire2:EmitSound("SpitterZombie.Acid")
+										fire2:EmitSound("Event.SpitterSpit")
+										timer.Simple(7.8, function()
+											fire2:StopSound("Event.SpitterSpit")
+											fire2:StopSound("SpitterZombie.Acid")
+											fire2:EmitSound("SpitterZombie.Acid.fadeout")
+										end)
+										fire2:Activate()
+										fire2.IsSpitterFire = true
+									for i=1,10 do
+											
+											local fire = ents.Create("env_fire")
+											if not IsValid(fire) then return end
+										 
+											fire:SetOwner(slef)
+											local forward = self:GetForward()
+											local right = self:GetRight()
+											fire:SetPos(self:GetPos() + forward*(math.random(-300,300)) + right*(math.random(-300,300)))
+											--no glow + delete when out + start on + last forever
+											fire:SetKeyValue("spawnflags", tostring(128 + 32 + 4 + 2))
+											fire:SetKeyValue("firesize", "100")
+											fire:SetKeyValue("fireattack", 1)
+											fire:SetKeyValue("health", "8")
+											fire:SetKeyValue("damagescale", "3") -- only neg. value prevents dmg
+										 
+											fire:Spawn()
+											fire:Activate()
+											fire.IsSpitterFire = true
+									end
+									self:Remove()
+								end
+							end	
+							
 						end
 					end
-				end]]
+				end
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
 					self.loco:SetAcceleration(-270)
@@ -1493,6 +1504,7 @@ function ENT:OnKilled( dmginfo )
 	local pos = self:GetPos()
 	self:PrecacheGibs()
 	if SERVER then
+		if (dmginfo:GetAttacker():GetClass() == "env_fire") then return end
 		if (IsValid(self.Enemy)) then
 			if (self:GetEnemy():IsPlayer()) then
 				self:GetEnemy():SetMoveType(MOVETYPE_WALK)
@@ -1507,6 +1519,28 @@ function ENT:OnKilled( dmginfo )
 						
 					self:BecomeRagdoll(dmginfo)
 				end	
+				
+					local fire = ents.Create("env_fire")
+					if not IsValid(fire) then return end
+				 
+					fire:SetOwner(self)
+					fire:SetPos(self:GetPos())
+					--no glow + delete when out + start on + last forever
+					fire:SetKeyValue("spawnflags", tostring(128 + 32 + 4 + 2))
+					fire:SetKeyValue("firesize", "100")
+					fire:SetKeyValue("fireattack", 1)
+					fire:SetKeyValue("health", "8")
+					fire:SetKeyValue("damagescale", "3") -- only neg. value prevents dmg
+				 
+					fire:Spawn()
+					fire:EmitSound("SpitterZombie.Acid")
+					fire:EmitSound("Event.SpitterSpit")
+					timer.Simple(7.8, function()
+						fire:StopSound("SpitterZombie.Acid")
+						fire:StopSound("Event.SpitterSpit")
+						fire:EmitSound("SpitterZombie.Acid.fadeout")
+					end)
+					fire:Activate()
 	end
 end
  

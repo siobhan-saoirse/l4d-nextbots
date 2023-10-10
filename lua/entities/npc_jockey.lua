@@ -1000,7 +1000,7 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end

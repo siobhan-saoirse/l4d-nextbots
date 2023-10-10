@@ -78,7 +78,7 @@ ENT.AttackDelay = 50
 ENT.AttackDamage = 6
 ENT.AttackRange = 65
 ENT.AttackRange2 = 120
-ENT.RangedAttackRange = 1800
+ENT.RangedAttackRange = 600
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
 ENT.Walking = false
@@ -254,7 +254,7 @@ function ENT:PlaySequenceAndMove(seq, options, callback)
 			end
 			vec:Rotate(self:GetAngles() + angles)
 			self:SetAngles(self:LocalToWorldAngles(angles))
-			if (self:IsOnGround()) then
+			if (self:IsInWorld() and self:IsOnGround()) then
 				previousPos = self:GetPos() + vec*self:GetModelScale()
 				self:SetPos(previousPos)
 			end
@@ -426,7 +426,7 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound("hunterZombie.Voice")
+			--self:EmitSound("HunterZombie.Alert")
 		end
 
 	end)
@@ -967,27 +967,22 @@ function ENT:RunBehaviour()
 					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_upper_knife")) ) 
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
-				self.loco:SetAcceleration(150)
 				self:ChaseEnemy()
 			else
 				-- Since we can't find an enemy, lets wander
 				-- Its the same code used in Garry's test bot
 				if (self:IsOnGround()) then
-					if (math.random(1,800) == 1) then
+					if (math.random(1,200) == 1) then
 						local act = self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))
-						self:StartActivity( act )
 						self.loco:SetDesiredSpeed( 300 * 0.5 )
-						self:MoveToPos(self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400)
+						self.loco:SetAcceleration(400)	
+						self:StartActivity( act )
+						self.loco:Approach(self:GetPos() + Vector( math.Rand( -1, 1 ), math.Rand( -1, 1 ), 0 ) * 400, 1 )
+						self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01")) ) 
 						self.Walking = true 
-					else
-						if (self:GetCycle() == 1 and self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("walk_upper_knife"))) then
-							self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01")) ) 
-						end
-						self.Walking = false
 					end
 				end
-			end
+			end 
 			coroutine.wait(0.01)
 		
 		elseif (!self.Ready or self.ContinueRunning or self.PlayingSequence2) then
@@ -1026,7 +1021,7 @@ function ENT:BodyUpdate()
 	-- This helper function does a lot of useful stuff for us.
 	-- It sets the bot's move_x move_y pose parameters, sets their animation speed relative to the ground speed, and calls FrameAdvance.
 	-- 
-	if (self:IsOnGround() and (IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
+	if (self:IsOnGround() and ((IsValid(self:GetEnemy()) and self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) or self:GetActivity() == ACT_WALK) then
 		if (self.Ready and !self.PlayingSequence2 and !self.PlayingSequence3 || self.Pouncing) then
 			self:BodyMoveXY()
 			-- BodyMoveXY() already calls FrameAdvance, calling it twice will affect animation playback, specifically on layers
@@ -1075,7 +1070,7 @@ function ENT:Think()
 			end
 		end
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
-			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire") then
+			if (v:GetClass() == "entityflame" || v:GetClass() == "env_fire" and !v.IsSpitterFire) then
 				self:Ignite(60,120)
 			end
 		end
@@ -1083,6 +1078,19 @@ function ENT:Think()
 			self:SetCycle(0)
 			self:StartActivity( self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) 
 		end
+			if (self:GetEnemy() != nil and !self.Pouncing and !self.Pounced and !self.PlayingSequence3 and !self.PlayingSequence2) then
+				if (string.find(self:GetModel(),"mud")) then
+	
+					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+	
+				else
+					if (self:GetPos():Distance(self:GetEnemy():GetPos()) < self.RangedAttackRange) then
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Crouch_Walk_Upper_KNIFE"))  ) )
+					else
+						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+					end
+				end
+			end
 		if (!self:IsOnGround() and !self.Pounced) then
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
@@ -1117,7 +1125,11 @@ function ENT:Think()
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
 	
 							else
-								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+								if (self:GetPos():Distance(self:GetEnemy():GetPos()) < self.RangedAttackRange) then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Crouch_Walk_Upper_KNIFE"))  ) )
+								else
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_upper_knife"))  ) )			-- Set the animation
+								end
 							end
 						else
 							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_01"))  ) )
@@ -1407,15 +1419,17 @@ function ENT:Think()
 							self.loco:ClearStuck() 
 							self.DontWannaUseSameSequence = false
 						end
-					elseif (self.Ready) then
-						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 300  )
-							self.loco:SetAcceleration(500 )
-						else
-							self.loco:SetDesiredSpeed(300 * self:GetModelScale())
-							self.loco:SetAcceleration(500 * self:GetModelScale())
-						end
 					end
+				elseif (self.Ready) then
+					
+					if (IsValid(self:GetEnemy()) and self:GetPos():Distance(self:GetEnemy():GetPos()) < self.RangedAttackRange) then
+						self.loco:SetDesiredSpeed(300 * 0.5)
+						self.loco:SetAcceleration(200 * 0.5)
+					else								
+						self.loco:SetDesiredSpeed(300 * self:GetModelScale())
+						self.loco:SetAcceleration(200 * self:GetModelScale())
+					end
+					
 				end
 			elseif (IsValid(self:GetEnemy()) and self:GetEnemy():Health() < 0) then
 				self:SetEnemy(nil)
@@ -1467,6 +1481,13 @@ function ENT:ChaseEnemy( options )
 				end
 			end
 		end 
+					if (IsValid(self:GetEnemy()) and self:GetPos():Distance(self:GetEnemy():GetPos()) < self.RangedAttackRange) then
+						self.loco:SetDesiredSpeed(280 * 0.3)
+						self.loco:SetAcceleration(200 * 0.3)
+					else								
+						self.loco:SetDesiredSpeed(280 * self:GetModelScale())
+						self.loco:SetAcceleration(200 * self:GetModelScale())
+					end
 		local pos = self:GetEnemy():GetPos()
 		if (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) then
 			for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do -- avoid other infected
