@@ -43,7 +43,7 @@ local function lookForNextPlayer(ply)
 
 				else
 
-					if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
+					if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC() || v:IsNextBot() && string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
 						if (v:Health() > 1) then
 							table.insert(npcs, v)
 						end
@@ -523,7 +523,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot()) then return end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
@@ -558,8 +558,6 @@ function ENT:HaveEnemy()
 			
 			return self:FindEnemy()
 		-- If the enemy is dead( we have to check if its a player before we use Alive() )
-		elseif (self:GetEnemy():IsNextBot()) then
-			return self:FindEnemy()
 		elseif (engine.ActiveGamemode() == "teamfortress") then
 			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
 				return self:FindEnemy()
@@ -815,7 +813,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 150)) do
-					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
+					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and string.find(v:GetClass(),"survivor")) and v ~= self) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
 							"HulkZombie.Punch",
@@ -827,7 +825,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						dmginfo:SetDamageType(DMG_CRUSH)
 						dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
 						v:SetPos(v:GetPos() + Vector(0,0,30))
-						v:SetVelocity(v:GetAimVector() * -1100 + Vector(0,0,100))
+						v:SetVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 						end

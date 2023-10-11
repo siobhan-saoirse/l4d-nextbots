@@ -495,7 +495,7 @@ function ENT:SetEnemy(ent)
 	if (IsValid(self.PouncedAnimationEntity)) then
 		self.PouncedAnimationEntity:Remove()
 	end
-	if (ent != nil and ent:IsNextBot()) then return end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	self.Pounced = false
 	
@@ -534,8 +534,6 @@ function ENT:HaveEnemy()
 			
 			return self:FindEnemy()
 		-- If the enemy is dead( we have to check if its a player before we use Alive() )
-		elseif (self:GetEnemy():IsNextBot()) then
-			return self:FindEnemy()
 		elseif (engine.ActiveGamemode() == "teamfortress") then
 			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
 				return self:FindEnemy()

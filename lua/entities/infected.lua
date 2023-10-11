@@ -926,8 +926,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot() and !ent.IsAL4DZombie) then self.Grenade = nil self.Enemy = nil return false end 
-	if (ent != nil and ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then self.Grenade = nil self.Enemy = nil return false end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then self.Grenade = nil self.Enemy = nil return false end
 	if (IsValid(self.Enemy)) then
 		self:GetEnemy():StopSound("Event.Mobbed")
 		self.Enemy.IsMobbed = false

@@ -29,7 +29,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC() || v:IsNextBot() && string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -408,7 +408,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot()) then return end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end

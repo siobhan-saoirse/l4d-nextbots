@@ -464,7 +464,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot()) then return end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
