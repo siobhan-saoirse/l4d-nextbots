@@ -803,10 +803,11 @@ function ENT:Think()
 								end
 
 				self.FallDamage = 0;
-				timer.Create("BurpWhileFalling"..self:EntIndex(), 0.8, 0, function()
+				timer.Create("BurpWhileFalling"..self:EntIndex(), 1.0, 0, function()
 					if (!self:IsOnGround()) then
 						if (!self.Falling) then
 							self.Falling = true
+							self:ResetSequence("Idle_Falling")
 							self:EmitSound("player/survivor/voice/"..self.SurvivorName.."/fall0"..math.random(1,4)..".wav")
 						end
 						self.FallDamage = self.FallDamage + 40
@@ -817,7 +818,7 @@ function ENT:Think()
 			end
 		else
 			if (self.HaventLandedYet) then
-				self:AddGestureSequence(self:LookupSequence("flinch_01"))
+				self:AddGestureSequence(self:LookupSequence("Jump_Land_gesture"))
 				if (self:IsOnGround() and self.Ready) then
 					if (self:GetEnemy() != nil) then
 						if (self:Health()*2<100) then
@@ -1043,7 +1044,7 @@ function ENT:Think()
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
 							self:EmitSound("Weapon.Swing")
-							local selanim = self:LookupSequence(table.Random({"Melee_Sweep_Running_Rifle","Melee_Sweep_Running_Rifle_02","Melee_Sweep_Running_Rifle_03"}))
+							local selanim = self:LookupSequence(table.Random({"Melee_Sweep_Running_Rifle","Melee_Sweep_Running_Rifle_02","Melee_Sweep_Running_Rifle_03","Melee_Straight_Running_Rifle","Melee_Shove_Standing_Rifle",}))
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 0.7
 							self:AddGesture(anim)
@@ -1089,7 +1090,7 @@ function ENT:Think()
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
 							self:EmitSound("Weapon.Swing")
-							local selanim = self:LookupSequence(table.Random({"Melee_Sweep_Running_Rifle","Melee_Sweep_Running_Rifle_02","Melee_Sweep_Running_Rifle_03"}))
+							local selanim = self:LookupSequence(table.Random({"Melee_Sweep_Running_Rifle","Melee_Sweep_Running_Rifle_02","Melee_Sweep_Running_Rifle_03","Melee_Straight_Running_Rifle","Melee_Shove_Standing_Rifle",}))
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 0.7
 							self:AddGesture(anim)
