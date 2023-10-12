@@ -502,7 +502,7 @@ function ENT:HaveEnemy()
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								else
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
 								end
@@ -536,7 +536,7 @@ function ENT:HaveEnemy()
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))  ) )
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Injured_PumpShotgun"))  ) )
 								else
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 								end
@@ -728,7 +728,7 @@ function ENT:RunBehaviour()
 				-- Now that we have an enemy, the code in this block will run
 				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))
 				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_smg")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_smg"))
-				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_shotgun")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))) then
+				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_shotgun")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("Idle_Injured_PumpShotgun"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
 					
@@ -743,7 +743,7 @@ function ENT:RunBehaviour()
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								else
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
 								end
@@ -765,7 +765,7 @@ function ENT:RunBehaviour()
 						end
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				if (!self.Incap) then
+				if (!self.Incap and !self:GetNoDraw()) then
 					self:ChaseEnemy()
 				end
 			else
@@ -781,7 +781,7 @@ function ENT:RunBehaviour()
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))  ) )
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Injured_PumpShotgun"))  ) )
 								else
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 								end
@@ -888,18 +888,36 @@ function ENT:Think()
 			if (string.find(v:GetClass(),"survivor") and v.Incap and !v.GettingRevived and v:EntIndex() != self:EntIndex()) then
 				v.GettingRevived = true
 				if (v.IncapAmount > 2) then
-					self:EmitSound(self.SurvivorName.."_ReviveFriendCritical0"..math.random(1,3))
+					self:EmitSound(self.SurvivorName.."_ReviveCriticalFriend0"..math.random(1,3))
 				else
 					self:EmitSound(self.SurvivorName.."_ReviveFriendLoud0"..math.random(1,6))
 				end
 				v:PlaySequenceAndMove("GetUpFrom_Incap")
 				self:PlaySequenceAndMove("Heal_Incap_Standing_02")
 				timer.Simple(v:SequenceDuration(v:LookupSequence("GetUpFrom_Incap")) + 0.1, function()
-					v:ResetSequence( v:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 					v.Incap = false
 					v.Ready = true
 					v.GettingRevived = false	
 					v:SetHealth(30)
+					v.Weapon:Remove()
+					v.HaventLandedYet = true
+					local axe = ents.Create("gmod_button")
+					if (string.find(v:GetModel(),"coach") || string.find(v:GetModel(),"biker") || string.find(v:GetModel(),"manager")) then
+						axe:SetModel("models/w_models/weapons/w_autoshot_m4super.mdl")
+					elseif (string.find(v:GetModel(),"namvet") || string.find(v:GetModel(),"gambler")) then
+						axe:SetModel("models/w_models/weapons/w_rifle_m16a2.mdl")
+					elseif (string.find(v:GetModel(),"teenangst") || string.find(v:GetModel(),"producer")) then
+						axe:SetModel("models/w_models/weapons/w_smg_uzi.mdl")
+					elseif (string.find(v:GetModel(),"mechanic")) then
+						axe:SetModel("models/w_models/weapons/w_rifle_ak47.mdl")
+					else
+						axe:SetModel("models/w_models/weapons/w_desert_eagle.mdl")
+					end
+					axe:SetPos(v:GetPos())
+					axe:SetAngles(v:GetAngles())
+					axe:SetParent(v)
+					axe:AddEffects(bit.bor(EF_BONEMERGE,EF_BONEMERGE_FASTCULL))
+					v.Weapon = axe
 					v:EmitSound(v.SurvivorName.."_Thanks0"..math.random(1,5))
 				end)
 			end
@@ -985,7 +1003,7 @@ function ENT:Think()
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								else
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
 								end
@@ -1017,7 +1035,7 @@ function ENT:Think()
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))  ) )
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PUMPSHOTGUN"))  ) )
 								else
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 								end
@@ -1038,7 +1056,7 @@ function ENT:Think()
 					end
 					end
 				end
-				if (self.FallDamage > 0) then
+				if (self.FallDamage and self.FallDamage > 0) then
 					local dmginfo = DamageInfo()
 					dmginfo:SetDamageType(DMG_FALL)
 					dmginfo:SetDamage(self.FallDamage)
@@ -1235,7 +1253,7 @@ function ENT:Think()
 			if (!self.Incap and self:GetMoveType() != MOVETYPE_NONE and IsValid(self:GetEnemy()) and self:IsOnGround() and !self.PlayingSequence3 and !self.PlayingSequence2) then
 				if (!self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
-					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
+					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay) and !self:GetEnemy().PlayingSequence3 and !self:GetEnemy().PlayingSequence2) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
@@ -1282,17 +1300,15 @@ function ENT:Think()
 							self.loco:SetAcceleration(-500 * self:GetModelScale())
 						end
 					end
-				elseif (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
-					if (self:GetEnemy():GetClass() == "npc_tank" or self:GetEnemy():GetClass() == "npc_tank_vs" or self:GetEnemy():GetClass() == "npc_boomer" or self:GetEnemy():GetClass() == "npc_charger") then
-						
-					else
-						self.loco:SetDesiredSpeed( 0 )
-						self.loco:SetAcceleration(500)
-					end
+				elseif (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 + 100 and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
+					self.loco:SetDesiredSpeed( 0 )
+					self.loco:SetAcceleration(500)
+					self:SetPoseParameter("move_x",0)
+					self:SetPoseParameter("move_y",0)
 					self.loco:ClearStuck() 
 				elseif (!self.Incap and self:GetMoveType() != MOVETYPE_NONE and !self.ContinueRunning and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
 					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
-						if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
+						if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay) and !self:GetEnemy().PlayingSequence3 and !self:GetEnemy().PlayingSequence2) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
@@ -1384,7 +1400,7 @@ function ENT:ChaseEnemy( options )
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+									self:ResetSequence( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								else
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
 								end
@@ -1448,11 +1464,10 @@ function ENT:ChaseEnemy( options )
 
 end
 function ENT:OnInjured( dmginfo )
-	if (dmginfo:GetDamage() > self:Health() and !self.Incap and self.IncapAmount < 3) then
+	if (dmginfo:GetDamage() > self:Health() - 1 and !self.Incap and self.IncapAmount < 3 and !dmginfo:IsDamageType(DMG_FALL)) then
 		dmginfo:SetDamage(0)
 		self:EmitSound(string.Replace(self.SurvivorName,"Player.","npc.").."_IncapacitatedInitial0"..math.random(1,3))
 		self.PainSoundTime = CurTime() + 1.5
-		self.Incap = true
 		self.IncapAmount = self.IncapAmount + 1
 		self:SetHealth(300)
 		local death = table.Random({"Death"})
@@ -1470,6 +1485,7 @@ function ENT:OnInjured( dmginfo )
 					axe:SetParent(self)
 					axe:AddEffects(bit.bor(EF_BONEMERGE,EF_BONEMERGE_FASTCULL))
 					self.Weapon = axe
+		self.Incap = true
 	end
 	if ((!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
 		if (self.Incap) then
@@ -1500,6 +1516,14 @@ function ENT:OnInjured( dmginfo )
 			end
 			self.PainSoundTime = CurTime() + 1.5
 		end
+	end
+	if ((string.find(dmginfo:GetAttacker():GetClass(),"survivor") or dmginfo:GetAttacker():IsPlayer()) and !self.Incap) then
+		timer.Simple(0.8, function()
+		
+			self:EmitSound(self.SurvivorName.."_FriendlyFire"..table.Random({"01","02","03","04","05","06","07","08","09"}))
+		
+		end)
+		dmginfo:ScaleDamage(0.1)
 	end
 	if (string.find(self:GetModel(),"ceda")) then
 		if SERVER then
@@ -1591,8 +1615,10 @@ function ENT:OnInjured( dmginfo )
 			self:EmitSound("BoomerZombie.BulletImpact")
 		end
 	end
-	if (!self.Incap and !dmginfo:IsDamageType(DMG_CLUB)) then
+	if (!self.Incap and !dmginfo:IsDamageType(DMG_CLUB) and !string.find(dmginfo:GetAttacker():GetClass(),"hunter")) then
 		dmginfo:ScaleDamage(0.4)
+	elseif (self.Incap) then
+		dmginfo:ScaleDamage(2)
 	end
 end
 function ENT:Touch( entity )
@@ -1637,16 +1663,12 @@ function ENT:OnKilled( dmginfo )
 	self:PrecacheGibs()
 	if SERVER then
 
-		local death = table.Random({"Die_Incap"})
-		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
 		self.Ready = false
 		self.Weapon:Remove()
-		self:PlaySequenceAndMove(self:LookupSequence(death))
-			timer.Create("Dying"..self:EntIndex(), 0.2, 0, function()
-				if (IsValid(self) and !self.PlayingSequence2) then
-					self:BecomeRagdoll(dmginfo)
-				end	
-			end)
+		self:BecomeRagdoll(dmginfo)
+		timer.Simple(0.1, function()
+			self:Remove()
+		end)
 		 
 	end
 end

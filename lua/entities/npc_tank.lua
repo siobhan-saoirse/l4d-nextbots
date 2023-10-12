@@ -741,10 +741,18 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 					end
 				else
 					local p = self.Door
-					self:EmitSound(
-						"HulkZombie.Punch",
-						85, 100
-					)		
+					
+					if (self:GetEnemy().Incap) then
+						self:EmitSound(
+							"HulkZombie.PunchIncap",
+							85, 100
+						)
+					else
+						self:EmitSound(
+							"HulkZombie.Punch",
+							85, 100
+						)		
+					end 
 					local shouldvegoneforthehead = self:GetEnemy():EyePos()
 					local bone = 1
 					shouldvegoneforthehead = self:GetEnemy():GetBonePosition(bone)
@@ -767,16 +775,25 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 150)) do
 					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and string.find(v:GetClass(),"survivor")) and v ~= self) then 
 						self.loco:ClearStuck() 
-						self:EmitSound(
-							"HulkZombie.Punch",
-							85, 100
-						)
+						if (self:GetEnemy().Incap) then
+							self:EmitSound(
+								"HulkZombie.PunchIncap",
+								85, 100
+							)
+						else
+							self:EmitSound(
+								"HulkZombie.Punch",
+								85, 100
+							)		
+						end 
 						local dmginfo = DamageInfo()
 						dmginfo:SetAttacker(self)
 						dmginfo:SetInflictor(self)
 						dmginfo:SetDamageType(DMG_CRUSH)
 						dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
-						v:SetPos(v:GetPos() + Vector(0,0,90))
+						if (!self:GetEnemy().Incap) then
+							v:SetPos(v:GetPos() + Vector(0,0,90))
+						end
 						v:SetAbsVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
@@ -1169,6 +1186,9 @@ function ENT:Think()
 								self:SetEnemy(nil)
 								self.WasAttackingDoor = true
 								local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+								if (self:GetEnemy().Incap) then
+									selanim = self:LookupSequence("Attack_Incap_03")
+								end
 								local anim = self:GetSequenceActivity(selanim)
 								self.MeleeAttackDelay = CurTime() + 2.0
 								self:AddGesture(anim)
@@ -1182,6 +1202,9 @@ function ENT:Think()
 									self:EmitSound("HulkZombie.Attack")
 									self.WasAttackingDoor = true
 									local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+									if (self:GetEnemy().Incap) then
+										selanim = self:LookupSequence("Attack_Incap_03")
+									end
 									local anim = self:GetSequenceActivity(selanim)
 									self.MeleeAttackDelay = CurTime() + 2.0
 									self:AddGesture(anim)
@@ -1206,6 +1229,9 @@ function ENT:Think()
 							end
 							self:EmitSound("HulkZombie.Attack")
 							local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+							if (self:GetEnemy().Incap) then
+								selanim = self:LookupSequence("Attack_Incap_03")
+							end
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 2.0
 							self:AddGesture(anim)
@@ -1285,6 +1311,9 @@ function ENT:Think()
 							end
 							self:EmitSound("HulkZombie.Attack")
 							local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
+							if (self:GetEnemy().Incap) then
+								selanim = self:LookupSequence("Attack_Incap_03")
+							end
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 2.0
 							self:AddGesture(anim)
