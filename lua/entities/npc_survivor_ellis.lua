@@ -38,7 +38,7 @@ local function lookForNextPlayer(ply)
 	if (math.random(1,16) == 1) then
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 120000 )) do
 			
-			if ((v:IsNPC() || v:IsNextBot()) and v:GetPos() != nil and !string.find(v:GetClass(),"survivor") and v:EntIndex() != ply:EntIndex()) then
+			if ((v:IsNPC() && v:Classify() != CLASS_PLAYER_ALLY && v:Classify() != CLASS_PLAYER_ALLY_VITAL || v:IsNextBot()) and v:GetPos() != nil and !string.find(v:GetClass(),"survivor") and v:EntIndex() != ply:EntIndex()) then
 				if (IsValid(v)) then
 					table.insert(npcs, v)
 				end
@@ -89,6 +89,7 @@ ENT.AttackDamage = 4
 ENT.AttackRange = 90
 ENT.AttackRange2 = 300
 ENT.RangedAttackRange = 200
+ENT.IncapAmount = 0
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
 ENT.Walking = false
@@ -178,7 +179,7 @@ function ENT:Initialize()
 		self:SetSkin(math.random(0,self:SkinCount()-1))
 		if SERVER then
 			for k,v in ipairs(ents.GetAll()) do
-				if v:IsNPC() then
+				if v:IsNPC() and v:Classify() != CLASS_PLAYER_ALLY and v:Classify() != CLASS_PLAYER_ALLY_VITAL then
 					
 					v:AddEntityRelationship(self,D_HT,99)
 					
@@ -454,11 +455,13 @@ function ENT:SetEnemy(ent)
 		end
 		self.Idling = false
 	end
-	for k,v in ipairs(nearestNPC(self)) do
-		if v:IsNPC() then
-			v:AddEntityRelationship(self,D_HT,99)
-		end
-	end
+			for k,v in ipairs(ents.GetAll()) do
+				if v:IsNPC() and v:Classify() != CLASS_PLAYER_ALLY and v:Classify() != CLASS_PLAYER_ALLY_VITAL then
+					
+					v:AddEntityRelationship(self,D_HT,99)
+					
+				end
+			end
 end
 function ENT:GetEnemy()
 	return self.Grenade or self.Enemy
@@ -487,22 +490,70 @@ function ENT:HaveEnemy()
 		-- The enemy isn't valid so lets look for a new onethen
 		if (self:IsOnGround() and self.Ready) then
 			if (self:GetEnemy() != nil) then
-				if (self:Health()*2<100) then
+				
+						if (self:Health()*2<100) then
 
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("limprun_rifle"))  ) )			-- Set the animation
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
+								end
 
-				else
-					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_rifle"))  ) )			-- Set the animation
-				end
+						else
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_PISTOL"))  ) 
+								end
+						end
 			else
 				--self:SetCycle(0)
 				if (!self.Idling and !self.PlayingSequence3) then
+					
 					if (self:Health()*2<100) then
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_rifle"))  ) )
-						self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_injured_rifle"))  ) 
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))  ) )
+								else
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
+								end
 					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle"))  ) )
-						self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle"))  ) 
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG"))  ) )
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))  ) )
+								else
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))  ) )
+								end
 					end
 					self.Idling = true
 				end
@@ -526,11 +577,13 @@ function ENT:FindEnemy()
 		if ( ( v:IsNPC() or v:IsNextBot()) and !v:IsFlagSet(FL_NOTARGET) and v:Health() > 0 ) then
 			-- We found one so lets set it as our enemy and return tru
 			self:SetEnemy(v)
-				if v:IsNPC() then
+			for k,v in ipairs(ents.GetAll()) do
+				if v:IsNPC() and v:Classify() != CLASS_PLAYER_ALLY and v:Classify() != CLASS_PLAYER_ALLY_VITAL then
 					
 					v:AddEntityRelationship(self,D_HT,99)
 					
 				end
+			end
 			return true
 		end
 				
@@ -673,10 +726,43 @@ function ENT:RunBehaviour()
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
-				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle"))) then
+				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))
+				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_smg")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_smg"))
+				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_shotgun")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
-					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_rifle")) ) 
+					
+						if (self:Health()*2<100) then
+
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
+								end
+
+						else
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_PISTOL"))  ) 
+								end
+						end
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				if (!self.Incap) then
@@ -772,12 +858,21 @@ end
 function ENT:Think()
 	if SERVER then
 		for k,v in ipairs(ents.GetAll()) do
-			if v:IsNPC() then	
-				v:AddEntityRelationship(self,D_HT,99)
-			elseif v:IsNextBot() and !string.find(v:GetClass(),"survivor") and self:Health() > 0 and v.AttackRange2 and v.AttackRange2 > 0 and v.Enemy == nil and v:SetEnemy(randomSurvivor()) then	
+			if v:IsNextBot() and !string.find(v:GetClass(),"survivor") and self:Health() > 0 and v.AttackRange2 and v.AttackRange2 > 0 and v.Enemy == nil and v:SetEnemy(randomSurvivor()) then	
 				
 			end
 		end
+		
+			for k,v in ipairs(ents.GetAll()) do
+				if v:IsNPC() and v:Classify() != CLASS_PLAYER_ALLY and v:Classify() != CLASS_PLAYER_ALLY_VITAL then
+					
+					v:AddEntityRelationship(self,D_HT,99)
+				elseif v:IsNPC() and (v:Classify() == CLASS_PLAYER_ALLY || v:Classify() == CLASS_PLAYER_ALLY_VITAL) then
+					
+					v:AddEntityRelationship(self,D_LI,99)
+					
+				end
+			end
 	end
 	if (self:GetNoDraw() == true) then
 		self:SetMoveType(MOVETYPE_NONE)
@@ -792,10 +887,14 @@ function ENT:Think()
 		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
 			if (string.find(v:GetClass(),"survivor") and v.Incap and !v.GettingRevived and v:EntIndex() != self:EntIndex()) then
 				v.GettingRevived = true
-				self:EmitSound(self.SurvivorName.."_ReviveFriendLoud0"..math.random(1,6))
+				if (v.IncapAmount > 2) then
+					self:EmitSound(self.SurvivorName.."_ReviveFriendCritical0"..math.random(1,3))
+				else
+					self:EmitSound(self.SurvivorName.."_ReviveFriendLoud0"..math.random(1,6))
+				end
 				v:PlaySequenceAndMove("GetUpFrom_Incap")
 				self:PlaySequenceAndMove("Heal_Incap_Standing_02")
-				timer.Simple(v:SequenceDuration(v:LookupSequence("GetUpFrom_Incap")), function()
+				timer.Simple(v:SequenceDuration(v:LookupSequence("GetUpFrom_Incap")) + 0.1, function()
 					v:ResetSequence( v:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 					v.Incap = false
 					v.Ready = true
@@ -837,7 +936,7 @@ function ENT:Think()
 									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))
 								end
 			local mad2 = self:SelectRandomSequence(mad) 
-			self:StartActivity( mad )
+			self:ResetSequence( mad2 )
 		end
 		if (!self:IsOnGround() and !self.Incap) then
 			if (!self.HaventLandedYet) then 
@@ -908,24 +1007,35 @@ function ENT:Think()
 						end
 					else
 						--self:SetCycle(0)
+					if (self:Health()*2<100) then
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) )
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) 
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) 
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) )
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 									
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_SMG"))  ) )
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_SMG"))  ) 
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_SHOTGUN"))  ) )
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_SHOTGUN"))  ) 
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SHOTGUN"))  ) )
 								else
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_PISTOL"))  ) )
-									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_PISTOL"))  ) 
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
 								end
+					else
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG"))  ) )
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))  ) )
+								else
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))  ) )
+								end
+					end
 					end
 				end
 				if (self.FallDamage > 0) then
@@ -1262,15 +1372,38 @@ function ENT:ChaseEnemy( options )
 			if (self.loco:IsUsingLadder()) then
 				self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
 			else
-				if (self:IsOnGround()) then
-					if (self:Health()*2<100) then
+				
+						if (self:Health()*2<100) then
 
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("limprun_rifle"))  ) )			-- Set the animation
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
+								end
 
-					else
-						self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_rifle"))  ) )			-- Set the animation
-					end
-				end
+						else
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_PISTOL"))  ) 
+								end
+						end
 			end
 		end 
 		local pos = self:GetEnemy():GetPos()
@@ -1315,11 +1448,12 @@ function ENT:ChaseEnemy( options )
 
 end
 function ENT:OnInjured( dmginfo )
-	if (dmginfo:GetDamage() > self:Health() and !self.Incap) then
+	if (dmginfo:GetDamage() > self:Health() and !self.Incap and self.IncapAmount < 3) then
 		dmginfo:SetDamage(0)
 		self:EmitSound(string.Replace(self.SurvivorName,"Player.","npc.").."_IncapacitatedInitial0"..math.random(1,3))
 		self.PainSoundTime = CurTime() + 1.5
 		self.Incap = true
+		self.IncapAmount = self.IncapAmount + 1
 		self:SetHealth(300)
 		local death = table.Random({"Death"})
 		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
