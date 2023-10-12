@@ -33,22 +33,10 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if (!ply.IsVersus) then
-
-					if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
-						if (v:Health() > 1) then
-							table.insert(npcs, v)
-						end
+				if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC() && !v:IsNextBot() || v:IsNextBot() && string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
+					if (v:Health() > 1) then
+						table.insert(npcs, v)
 					end
-
-				else
-
-					if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC() || v:IsNextBot() && string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
-						if (v:Health() > 1) then
-							table.insert(npcs, v)
-						end
-					end
-
 				end
 			end
 		end
@@ -179,13 +167,6 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 					snd.Entity.NextStepSound = CurTime() + math.Rand(0.12,0.15)
 				end)
 				return true
-			end
-		end
-		if ((snd.Entity:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()  || snd.Entity:IsNPC()) and !snd.Entity:IsNextBot() and snd.Entity:GetClass() != "infected") then
-			for k,v in ipairs(ents.FindInSphere(snd.Entity:GetPos(),6000)) do
-				if (v:GetClass() == "npc_tank" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
-					v:SetEnemy(snd.Entity)
-				end
 			end
 		end
 	end
@@ -523,7 +504,6 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
@@ -562,6 +542,8 @@ function ENT:HaveEnemy()
 			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
 				return self:FindEnemy()
 			end	 
+		elseif (self:GetEnemy() != nil and self:GetEnemy():IsNextBot() and !string.find(self:GetEnemy():GetClass(),"npc_survivor")) then 
+			return self:FindEnemy()
 		elseif (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 			return self:FindEnemy()
 		end
@@ -602,50 +584,8 @@ function ENT:FindEnemy()
 	local _ents = lookForNextPlayer(self)
 	-- Here we loop through every entity the above search finds and see if it's the one we want
 		for k,v in ipairs( _ents ) do
-			if (engine.ActiveGamemode() == "teamfortress") then
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsFriendly(self) and GAMEMODE:EntityTeam(v) != TEAM_SPECTATOR and GAMEMODE:EntityTeam(v) != TEAM_FRIENDLY and v:Health() > 1 and !v:IsFlagSet(FL_NOTARGET) ) then
-					-- We found one so lets set it as our enemy and return true
-					self:SetEnemy(v)
-					--self:EmitSound("HulkZombie.RageAtVictim")
-					if (v:IsNPC() and v:Classify() != CLASS_ZOMBIE) then
-						if (!IsValid(v:GetEnemy())) then
-							v:SetEnemy(self)
-							
-							if (v:Classify() == CLASS_ZOMBIE) then
-								v:AddEntityRelationship(self,D_LI,99)
-							else
-								v:AddEntityRelationship(self,D_HT,99)
-							end
-							
-						end
-					end
 
-					if SERVER then
-						for _,npc in ipairs(ents.FindByClass("npc_*")) do
-							if (npc:Classify() != CLASS_ZOMBIE) then
-								npc:SetEnemy(self)
-							end
-						end
-						local anim = self:LookupSequence("exp_angry_0"..math.random(1,6))
-						self:AddGestureSequence(anim,true)
-					end
-
-					timer.Stop("IdleExpression"..self:EntIndex())
-					timer.Stop("AngryExpression"..self:EntIndex())
-					timer.Create("AngryExpression"..self:EntIndex(), 3, 0, function()
-						
-						if SERVER then
-							local anim = self:LookupSequence("exp_angry_0"..math.random(1,6))
-							self:AddGestureSequence(anim,true)
-						end
-
-						timer.Adjust("AngryExpression"..self:EntIndex(),self:SequenceDuration(anim) - 0.2)
-					end)
-					return true
-				end
-			else
-
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC()) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
 					--self:EmitSound("HulkZombie.RageAtVictim")
@@ -684,7 +624,6 @@ function ENT:FindEnemy()
 						timer.Adjust("AngryExpression"..self:EntIndex(),self:SequenceDuration(anim) - 0.2)
 					end)
 					return true
-				end
 			end
 		end	
 	
@@ -727,13 +666,26 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 			vel.p = vel.p
 			vel = vel:Forward() * 1800 -- * (self:GetPos():Distance(self:GetEnemy():GetPos()) * 0.007)
 	
-			
+			local slef = self
 			local phys = p:GetPhysicsObject() 
 			if phys then
 				p:GetPhysicsObject():AddVelocity(vel)
 				p:SetPhysicsAttacker(self)
 			end
 			
+			function p:Think(  )
+				for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
+					if (string.find(v:GetClass(),"npc_survivor")) then
+						ParticleEffect("tank_rock_throw_impact_chunks", self:GetPos(), self:GetAngles())
+						self:StopSound("HulkZombie.Throw.FlyLoop")
+						v:TakeDamage(30,slef,slef)
+						self:Remove()
+						self:EmitSound("HulkZombie.ThrownProjectileHit",95)
+					end
+				end
+				self:NextThink(CurTime())
+				return true
+			end
 			function p:PhysicsCollide( data, phys )
 				if ( data.Speed > 90 ) then 
 					if (IsValid(data.HitEntity)) then
@@ -824,8 +776,8 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						dmginfo:SetInflictor(self)
 						dmginfo:SetDamageType(DMG_CRUSH)
 						dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
-						v:SetPos(v:GetPos() + Vector(0,0,30))
-						v:SetVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
+						v:SetPos(v:GetPos() + Vector(0,0,90))
+						v:SetAbsVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 						end
@@ -1494,7 +1446,7 @@ function ENT:OnInjured( dmginfo )
 			self:SetEnemy(dmginfo:GetAttacker())
 		end
 	end
-	if ((math.random(1,50) == 1 || dmginfo:IsDamageType(DMG_BLAST)) and !self.PlayingSequence2 and !self.PlayingSequence) then
+	if ((dmginfo:IsDamageType(DMG_BLAST)) and !self.PlayingSequence2 and !self.PlayingSequence) then
 		local selanim = table.Random({"Shoved_Backward","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)

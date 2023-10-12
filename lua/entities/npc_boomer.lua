@@ -29,7 +29,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC() || string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_jockey"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -464,7 +464,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
-	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
+	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
@@ -499,8 +499,6 @@ function ENT:HaveEnemy()
 			
 			return self:FindEnemy()
 		-- If the enemy is dead( we have to check if its a player before we use Alive() )
-		elseif (self:GetEnemy():IsNextBot()) then
-			return self:FindEnemy()
 		elseif (engine.ActiveGamemode() == "teamfortress") then
 			if ( self:GetEnemy():IsTFPlayer() and (GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_SPECTATOR or GAMEMODE:EntityTeam(self:GetEnemy()) == TEAM_FRIENDLY or self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET)) ) then
 				return self:FindEnemy()
@@ -588,7 +586,7 @@ function ENT:FindEnemy()
 				end
 			else
 
-				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_boomer"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC() or string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_boomer"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
 					--self:EmitSound("BoomerZombie.RageAtVictim")
@@ -1509,7 +1507,7 @@ function ENT:OnKilled( dmginfo )
 								end
 							end)
 						end
-						if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot() and !v.IsAL4DZombie) and v ~= self and v:Visible(self)) then 
+						if ((v:IsPlayer() || v:IsNPC() || string.find(v:GetClass(),"survivor")) and v ~= self and v:Visible(self)) then 
 							
 							self.loco:ClearStuck() 
 							local dmginfo = DamageInfo()
@@ -1519,7 +1517,9 @@ function ENT:OnKilled( dmginfo )
 							dmginfo:SetDamage(8)
 							v:TakeDamageInfo(dmginfo) 
 							v.AttractedToInfected = true
-							
+							if (string.find(v:GetClass(),"survivor")) then
+								v:EmitSound(v.SurvivorName.."_BoomerReaction0"..math.random(1,9))
+							end
 							for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
 								if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
 									self.loco:ClearStuck() 

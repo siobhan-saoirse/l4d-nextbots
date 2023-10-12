@@ -2,7 +2,14 @@ if (!IsMounted("left4dead2")) then return end
 
 AddCSLuaFile()
 if CLIENT then
+	language.Add("npc_survivor_nick", "Nick")
+	language.Add("npc_survivor_rochelle", "Rochelle")
+	language.Add("npc_survivor_coach", "Coach")
 	language.Add("npc_survivor_ellis", "Ellis")
+	language.Add("npc_survivor_bill", "Bill")
+	language.Add("npc_survivor_zoey", "Zoey")
+	language.Add("npc_survivor_louis", "Louis")
+	language.Add("npc_survivor_francis", "Francis")
 end
 local function getAllInfected()
 	local npcs = {}
@@ -17,6 +24,15 @@ local function getAllInfected()
 	end 
 	return npcs
 end
+local function randomSurvivor()
+	local npcs = {}
+		for k,v in ipairs(ents.GetAll()) do
+			if (string.find(v:GetClass(),"survivor")) then
+				table.insert(npcs, v) 
+			end
+		end
+	return table.Random(npcs)
+end
 local function lookForNextPlayer(ply)
 	local npcs = {}
 	if (math.random(1,16) == 1) then
@@ -25,9 +41,6 @@ local function lookForNextPlayer(ply)
 			if ((v:IsNPC() || v:IsNextBot()) and v:GetPos() != nil and !string.find(v:GetClass(),"survivor") and v:EntIndex() != ply:EntIndex()) then
 				if (IsValid(v)) then
 					table.insert(npcs, v)
-					if (v.Enemy == nil and v:SetEnemy(v)) then
-					
-					end
 				end
 			end
 				
@@ -85,8 +98,17 @@ ENT.SurvivorName = "Mechanic"
 ENT.WeaponModel = "models/w_models/weapons/w_rifle_ak47.mdl"
 
 hook.Add("EntityEmitSound","SurvivorHearSound",function(snd)
-	if (IsValid(snd.Entity)) then 
-		if IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetClass(), "npc_survivor"))  and string.find(snd.SoundName, "step") then
+	if (string.StartWith(snd.SoundName,"(")) then
+		snd.SoundName = string.Replace(snd.SoundName, "(", ")")
+		return true
+	elseif (IsValid(snd.Entity)) then 
+		if IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetClass(), "npc_survivor"))  and !string.find(snd.SoundName, "step") then
+			if (string.find(snd.SoundName, "$survivor")) then
+				snd.SoundName = string.Replace(snd.SoundName, "$survivor", string.lower(string.Replace(snd.Entity.SurvivorName,"Player.","")))
+				return true
+			end
+			return true
+		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetClass(), "npc_survivor"))  and string.find(snd.SoundName, "step") then
 			snd.SoundName = string.Replace(snd.SoundName, "wade5", "wade1")
 			snd.SoundName = string.Replace(snd.SoundName, "wade6", "wade2")
 			snd.SoundName = string.Replace(snd.SoundName, "wade7", "wade3")
@@ -166,7 +188,7 @@ function ENT:Initialize()
 		--self:SetBodygroup(0,math.random(1,2))
 		--self:SetBodygroup(1,math.random(1,2))
 		
-		timer.Simple(1, function()
+		timer.Simple(0.1, function()
 		
 			self.Ready = true
 
@@ -407,20 +429,28 @@ function ENT:SetEnemy(ent)
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
-		if (ent:GetClass() == "npc_boomer") then
-			self:EmitSound(self.SurvivorName.."_WarnBoomer0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_hunter_l4d") then
-			self:EmitSound(self.SurvivorName.."_WarnHunter0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_smoker") then
-			self:EmitSound(self.SurvivorName.."_WarnSmoker0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_tank") then
-			self:EmitSound(self.SurvivorName.."_WarnTank0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_jockey") then
-			self:EmitSound(self.SurvivorName.."_WarnJockey0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_spitter") then
-			self:EmitSound(self.SurvivorName.."_WarnSpitter0"..math.random(1,3))
-		elseif (ent:GetClass() == "npc_charger") then
-			self:EmitSound(self.SurvivorName.."_WarnCharger0"..math.random(1,3))
+		if (ent:Health() > 0 and !self.Incap) then
+			if (math.random(1,5) == 1) then
+				self:EmitSound(self.SurvivorName.."_LookOut0"..math.random(1,4))
+			else
+				if (math.random(1,5) == 1) then
+					if (ent:GetClass() == "npc_boomer") then
+						self:EmitSound(self.SurvivorName.."_WarnBoomer0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_hunter_l4d") then
+						self:EmitSound(self.SurvivorName.."_WarnHunter0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_smoker") then
+						self:EmitSound(self.SurvivorName.."_WarnSmoker0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_tank") then
+						self:EmitSound(self.SurvivorName.."_WarnTank0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_jockey") then
+						self:EmitSound(self.SurvivorName.."_WarnJockey0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_spitter") then
+						self:EmitSound(self.SurvivorName.."_WarnSpitter0"..math.random(1,3))
+					elseif (ent:GetClass() == "npc_charger") then
+						self:EmitSound(self.SurvivorName.."_WarnCharger0"..math.random(1,3))
+					end
+				end
+			end
 		end
 		self.Idling = false
 	end
@@ -639,7 +669,7 @@ function ENT:RunBehaviour()
 			return
 		end 
 		-- Lets use the above mentioned functions to see if we have/can find a enemy
-		if self.Ready and !self.ContinueRunning then 
+		if !self.ContinueRunning then 
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
 				-- Now that we have an enemy, the code in this block will run
@@ -649,9 +679,9 @@ function ENT:RunBehaviour()
 					self:StartActivity( self:GetSequenceActivity(self:LookupSequence("run_rifle")) ) 
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
-				self.loco:SetDesiredSpeed( 210 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
-				self.loco:SetAcceleration(500)
-				self:ChaseEnemy()
+				if (!self.Incap) then
+					self:ChaseEnemy()
+				end
 			else
 				-- Since we can't find an enemy, lets wander
 				if (self:GetCycle() == 1 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_rifle"))) then
@@ -688,7 +718,7 @@ function ENT:RunBehaviour()
 			end
 			coroutine.wait(0.01)
 		
-		elseif (!self.Ready or self.ContinueRunning or self.PlayingSequence2) then
+		elseif (self.ContinueRunning or self.PlayingSequence2) then
 
 			if (self.ContinueRunning) then
 				-- Now that we have an enemy, the code in this block will run
@@ -744,12 +774,37 @@ function ENT:Think()
 		for k,v in ipairs(ents.GetAll()) do
 			if v:IsNPC() then	
 				v:AddEntityRelationship(self,D_HT,99)
+			elseif v:IsNextBot() and !string.find(v:GetClass(),"survivor") and self:Health() > 0 and v.AttackRange2 and v.AttackRange2 > 0 and v.Enemy == nil and v:SetEnemy(randomSurvivor()) then	
+				
 			end
 		end
+	end
+	if (self:GetNoDraw() == true) then
+		self:SetMoveType(MOVETYPE_NONE)
+	else
+		self:SetMoveType(MOVETYPE_CUSTOM)
 	end
 	if (IsValid(self:GetEnemy()) and (self:GetEnemy():IsPlayer() or self:GetEnemy():IsNPC() or self:GetEnemy():IsNextBot()) and self:GetEnemy():Health() < 1) then
 		self.Enemy = nil
 		self:FindEnemy()
+	end
+	if (!IsValid(self:GetEnemy())) then
+		for k,v in ipairs(ents.FindInSphere(self:GetPos(),120)) do
+			if (string.find(v:GetClass(),"survivor") and v.Incap and !v.GettingRevived and v:EntIndex() != self:EntIndex()) then
+				v.GettingRevived = true
+				self:EmitSound(self.SurvivorName.."_ReviveFriendLoud0"..math.random(1,6))
+				v:PlaySequenceAndMove("GetUpFrom_Incap")
+				self:PlaySequenceAndMove("Heal_Incap_Standing_02")
+				timer.Simple(v:SequenceDuration(v:LookupSequence("GetUpFrom_Incap")), function()
+					v:ResetSequence( v:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))  ) )
+					v.Incap = false
+					v.Ready = true
+					v.GettingRevived = false	
+					v:SetHealth(30)
+					v:EmitSound(v.SurvivorName.."_Thanks0"..math.random(1,5))
+				end)
+			end
+		end
 	end
 	if (self.PlayingSequence2) then
 
@@ -771,44 +826,43 @@ function ENT:Think()
 		end
 		if (self.Idling and self:GetCycle() == 1 and !self.PlayingSequence3) then
 			self:SetCycle(0)
-								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
-								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
-								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+			local mad = self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 									
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG"))  ) )
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG")) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))  ) )
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))
 								else
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))  ) )
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))
 								end
+			local mad2 = self:SelectRandomSequence(mad) 
+			self:StartActivity( mad )
 		end
-		if (!self:IsOnGround()) then
+		if (!self:IsOnGround() and !self.Incap) then
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  ) )
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  ) )
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 									
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("jump_SMG_01"))  ) )
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_SMG_01"))  )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("jump_SHOTGUN_01"))  ) )
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_SHOTGUN_01"))  )
 								else
-									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("jump_PISTOL_01"))  ) )
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_PISTOL_01"))  )
 								end
 
 				self.FallDamage = 0;
 				timer.Create("BurpWhileFalling"..self:EntIndex(), 1.0, 0, function()
-					if (!self:IsOnGround()) then
+					if (!self:IsOnGround() and !self.Incap) then
 						if (!self.Falling) then
 							self.Falling = true
-							self:ResetSequence("Idle_Falling")
-							self:EmitSound("player/survivor/voice/"..self.SurvivorName.."/fall0"..math.random(1,4)..".wav")
+							self:StartActivity(self:GetSequenceActivity(self:LookupSequence("Idle_Falling")))
+							self:EmitSound("Player.Fall")
 						end
 						self.FallDamage = self.FallDamage + 40
 
@@ -823,7 +877,19 @@ function ENT:Think()
 					if (self:GetEnemy() != nil) then
 						if (self:Health()*2<100) then
 
-							self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("limprun_rifle"))  ) )			-- Set the animation
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SMG"))  ) 
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_SHOTGUN"))  ) 
+								else
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_PISTOL"))  ) 
+								end
 
 						else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
@@ -867,12 +933,14 @@ function ENT:Think()
 					dmginfo:SetDamageType(DMG_FALL)
 					dmginfo:SetDamage(self.FallDamage)
 					self:TakeDamageInfo(dmginfo)
-					self:EmitSound("Player.FallGib")
+					self:EmitSound("Player.FallDamage")
 				else
 					self:EmitSound("Player.JumpLand")
 				end
 				self.Falling = false
 				self.HaventLandedYet = false
+				self.PlayingSequence2 = false
+				self.PlayingSequence3 = false
 			end
 		end
 		if (self.Ready and !self.PlayingSequence3 and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_rifle")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("limprun_rifle")))) then
@@ -880,6 +948,15 @@ function ENT:Think()
 		elseif (self.Ready and !self.PlayingSequence3 and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_rifle")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("limprun_rifle")))) then 
 
 			local mad = self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))
+								if (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+									
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG"))
+									
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN")) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))
+								end
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
 			self.Idling = true
@@ -912,14 +989,6 @@ function ENT:Think()
 				self.AvoidingEntity = nil
 				self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 			end
-		end
-		if (self:WaterLevel() > 2) then
-			local dmginfo = DamageInfo()
-			dmginfo:SetAttacker(self)
-			dmginfo:SetInflictor(self)
-			dmginfo:SetDamageType(DMG_DROWN)
-			dmginfo:SetDamage(self:Health())
-			self:TakeDamageInfo(dmginfo) 
 		end
 	end 
 	if SERVER then
@@ -954,16 +1023,34 @@ function ENT:Think()
 								self.ReloadTime = CurTime() + 3.5
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_start"))
-								timer.Simple(0.5, function()
+								timer.Simple(0.4, function()
 									self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
-									timer.Simple(0.5, function()
+									timer.Simple(0.4, function()
 										self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
-										timer.Simple(0.5, function()
-											self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_end"))
+										timer.Simple(0.4, function()
+											self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+											timer.Simple(0.4, function()
+												self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+												timer.Simple(0.4, function()
+													self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+													timer.Simple(0.4, function()
+														self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+														timer.Simple(0.4, function()
+															self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+															timer.Simple(0.4, function()
+																self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_loop"..math.random(1,3)))
+																timer.Simple(0.5, function()
+																	self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_end"))
+																end)
+															end)
+														end)
+													end)
+												end)
+											end)
 										end)
 									end)
 								end)
-								self.ReloadTime = CurTime() + 3.5
+								self.ReloadTime = CurTime() + 8.0
 							else
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Pistol"))
 								self.ReloadTime = CurTime() + 3.0
@@ -986,7 +1073,7 @@ function ENT:Think()
 						end)
 					end
 				end
-				if (IsValid(self:GetEnemy()) and self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 + 100 or self.PlayingSequence and !self.ContinueRunning) then
+				if (self:GetMoveType() != MOVETYPE_NONE and IsValid(self:GetEnemy()) and self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 + 200 or self.PlayingSequence and !self.ContinueRunning) then
 					if ((!self.FireTime || self.FireTime and CurTime() > self.FireTime) and self.Clip > 0) then
 						if (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 							for i=1,10 do
@@ -1013,34 +1100,34 @@ function ENT:Think()
 						end
 						if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_RIFLE"))
-							self.Weapon:EmitSound("weapons/rifle_ak47/gunfire/rifle_fire_1.wav")
+							self.Weapon:EmitSound("AK47.Fire")
 							self.FireTime = CurTime() + 0.12
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_RIFLE"))
-							self.Weapon:EmitSound("weapons/rifle/gunfire/rifle_fire_1.wav")
+							self.Weapon:EmitSound("Rifle.Fire")
 							self.FireTime = CurTime() + 0.1
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_SMG"))
-							self.Weapon:EmitSound("weapons/smg/gunfire/smg_fire_1.wav")
+							self.Weapon:EmitSound("SMG.Fire")
 							self.FireTime = CurTime() + 0.06
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_xm1014"))
-							self.Weapon:EmitSound("weapons/auto_shotgun/gunfire/auto_shotgun_fire_1.wav")
-							self.FireTime = CurTime() + 0.3
+							self.Weapon:EmitSound("AutoShotgun.Fire")
+							self.FireTime = CurTime() + 0.28
 						else
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_Pistol"))
-							self.Weapon:EmitSound("Weapon_DEagle.Single")
+							self.Weapon:EmitSound("Magnum.Fire")
 							self.FireTime = CurTime() + 0.4
 						end
 						self.Clip = self.Clip - 1
 					end
 				end
-			if (IsValid(self:GetEnemy()) and self:IsOnGround() and !self.PlayingSequence3 and !self.PlayingSequence2) then
+			if (!self.Incap and self:GetMoveType() != MOVETYPE_NONE and IsValid(self:GetEnemy()) and self:IsOnGround() and !self.PlayingSequence3 and !self.PlayingSequence2) then
 				if (!self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
-							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
+							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
 								self:SetCollisionGroup(COLLISION_GROUP_NPC)
 							end
 							self:EmitSound("Weapon.Swing")
@@ -1050,7 +1137,7 @@ function ENT:Think()
 							self:AddGesture(anim)
 							self.loco:ClearStuck() 
 							timer.Simple(0.2, function()
-								for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.AttackRange2)) do
+								for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.AttackRange)) do
 									
 									if (IsValid(v) and (v:IsPlayer() or (v:IsNextBot()) or v:IsNPC()) and !string.find(v:GetClass(),"survivor")) then
 										self:EmitSound(
@@ -1074,16 +1161,26 @@ function ENT:Think()
 							self.DontWannaUseSameSequence = false
 						end
 					end
-					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then
-						self:SetPoseParameter("move_x",0)
-						self:SetPoseParameter("move_y",0)
-					end
 				end
-				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
-					self.loco:SetDesiredSpeed( 0 )
-					self.loco:SetAcceleration(500)
+				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 + 150 and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
+					if (self:GetEnemy():GetClass() == "npc_tank" or self:GetEnemy():GetClass() == "npc_tank_vs" or self:GetEnemy():GetClass() == "npc_boomer" or self:GetEnemy():GetClass() == "npc_charger") then
+						if (self:Health()*2<100) then
+							self.loco:SetDesiredSpeed(210 * self:GetModelScale() * 0.65)
+							self.loco:SetAcceleration(-500 * self:GetModelScale())
+						else
+							self.loco:SetDesiredSpeed(210 * self:GetModelScale())
+							self.loco:SetAcceleration(-500 * self:GetModelScale())
+						end
+					end
+				elseif (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
+					if (self:GetEnemy():GetClass() == "npc_tank" or self:GetEnemy():GetClass() == "npc_tank_vs" or self:GetEnemy():GetClass() == "npc_boomer" or self:GetEnemy():GetClass() == "npc_charger") then
+						
+					else
+						self.loco:SetDesiredSpeed( 0 )
+						self.loco:SetAcceleration(500)
+					end
 					self.loco:ClearStuck() 
-				elseif (!self.ContinueRunning and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
+				elseif (!self.Incap and self:GetMoveType() != MOVETYPE_NONE and !self.ContinueRunning and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0) then
 					if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 						if (IsValid(self:GetEnemy()) and (!self.MeleeAttackDelay || CurTime() > self.MeleeAttackDelay)) then
 							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
@@ -1121,7 +1218,7 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then						
 							if (self:Health()*2<100) then
-								self.loco:SetDesiredSpeed(210 * self:GetModelScale() * 0.8)
+								self.loco:SetDesiredSpeed(210 * self:GetModelScale() * 0.65)
 								self.loco:SetAcceleration(500 * self:GetModelScale())
 							else
 								self.loco:SetDesiredSpeed(210 * self:GetModelScale())
@@ -1218,6 +1315,58 @@ function ENT:ChaseEnemy( options )
 
 end
 function ENT:OnInjured( dmginfo )
+	if (dmginfo:GetDamage() > self:Health() and !self.Incap) then
+		dmginfo:SetDamage(0)
+		self:EmitSound(string.Replace(self.SurvivorName,"Player.","npc.").."_IncapacitatedInitial0"..math.random(1,3))
+		self.PainSoundTime = CurTime() + 1.5
+		self.Incap = true
+		self:SetHealth(300)
+		local death = table.Random({"Death"})
+		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
+		self.Ready = false
+		self.Weapon:Remove()
+		self:PlaySequenceAndMove(self:LookupSequence(death))
+		timer.Simple(self:SequenceDuration(self:LookupSequence(death)), function()
+			self:ResetSequence("Idle_Incap_Pistol")
+		end)
+					local axe = ents.Create("gmod_button")
+					axe:SetModel("models/w_models/weapons/w_desert_eagle.mdl")
+					axe:SetPos(self:GetPos())
+					axe:SetAngles(self:GetAngles())
+					axe:SetParent(self)
+					axe:AddEffects(bit.bor(EF_BONEMERGE,EF_BONEMERGE_FASTCULL))
+					self.Weapon = axe
+	end
+	if ((!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
+		if (self.Incap) then
+			if (self:GetNoDraw() == true) then
+				self:EmitSound("Player.ScreamWhilePounced")
+				self.PainSoundTime = CurTime() + 1.5
+			else
+				if (string.find(dmginfo:GetAttacker():GetClass(),"tank")) then
+					self:EmitSound(self.SurvivorName.."_TankPound0"..math.random(1,6))	
+				else
+					self:EmitSound(self.SurvivorName.."_IncapacitatedInjury0"..math.random(1,3))
+				end
+				self.PainSoundTime = CurTime() + 1.5
+			end
+		else
+			if (self:GetNoDraw() == true) then
+				self:EmitSound("Player.ScreamWhilePounced")
+			else
+				if (self:Health()*2<100) then
+					self:EmitSound(self.SurvivorName.."_HurtCritical0"..math.random(1,9))
+				else
+					if (dmginfo:GetDamage() > 20) then
+						self:EmitSound(self.SurvivorName.."_HurtMajor0"..math.random(1,6))
+					else
+						self:EmitSound(self.SurvivorName.."_HurtMinor0"..math.random(1,6))
+					end
+				end
+			end
+			self.PainSoundTime = CurTime() + 1.5
+		end
+	end
 	if (string.find(self:GetModel(),"ceda")) then
 		if SERVER then
 			self:Extinguish()
@@ -1237,25 +1386,12 @@ function ENT:OnInjured( dmginfo )
 			self.deflated = true
 		end
 	end
-	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
-		if (self.Incap) then
-			self:EmitSound(self.SurvivorName.."_IncapacitatedInjury0"..math.random(1,6))
-			self.PainSoundTime = CurTime() + 5.0
-		else
-			if (self:Health()*2<100) then
-				self:EmitSound(self.SurvivorName.."_HurtCritical0"..math.random(1,9))
-			else
-				self:EmitSound(self.SurvivorName.."_HurtMajor0"..math.random(1,6))
-			end
-			self.PainSoundTime = CurTime() + 1.5
-		end
-	end
 	if (dmginfo:GetAttacker() != nil and (dmginfo:GetAttacker():IsNPC() || dmginfo:GetAttacker():IsNextBot() && !string.find(dmginfo:GetAttacker():GetClass(),"npc_survivor"))) then 
 		if (self.Enemy != nil) then
 			self:SetEnemy(dmginfo:GetAttacker())
 		end
 	end
-	if (!self.Incap and (dmginfo:IsDamageType(DMG_BLAST)) and !self.PlayingSequence2 and !self.PlayingSequence) then
+	if (!self.Incap and (dmginfo:IsDamageType(DMG_BLAST) or string.find(dmginfo:GetAttacker():GetClass(),"npc_tank")) and !self.PlayingSequence2 and !self.PlayingSequence) then
 		local selanim = table.Random({"Shoved_Backward","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
@@ -1310,7 +1446,7 @@ function ENT:OnInjured( dmginfo )
 		dmginfo:GetAttacker():StopSound("General.BurningObject")
 	end
 	if (!self.flinchFinish) then
-		self:AddGesture(self:GetSequenceActivity(self:LookupSequence("flinch_02")),true)
+		self:AddGesture(self:GetSequenceActivity(self:LookupSequence("flinch_0"..math.random(1,3))),true)
 		self.flinchFinish = true
 		timer.Create("FlinchFinished"..self:EntIndex(), self:SequenceDuration(self:LookupSequence("flinch_02")), 1, function()
 			self.flinchFinish = false
@@ -1321,10 +1457,9 @@ function ENT:OnInjured( dmginfo )
 			self:EmitSound("BoomerZombie.BulletImpact")
 		end
 	end
-	if (self.Incap and math.random(1,100) == 1) then
-		self:OnKilled(dmginfo)
+	if (!self.Incap and !dmginfo:IsDamageType(DMG_CLUB)) then
+		dmginfo:ScaleDamage(0.4)
 	end
-	dmginfo:ScaleDamage(0.4)
 end
 function ENT:Touch( entity )
 end
@@ -1368,9 +1503,10 @@ function ENT:OnKilled( dmginfo )
 	self:PrecacheGibs()
 	if SERVER then
 
-		local death = table.Random({"Death"})
+		local death = table.Random({"Die_Incap"})
 		local death2 = self:GetSequenceActivity(self:LookupSequence(death))
 		self.Ready = false
+		self.Weapon:Remove()
 		self:PlaySequenceAndMove(self:LookupSequence(death))
 			timer.Create("Dying"..self:EntIndex(), 0.2, 0, function()
 				if (IsValid(self) and !self.PlayingSequence2) then
@@ -1384,7 +1520,7 @@ end
 if CLIENT then
 
 	function ENT:Draw()
-		if (LocalPlayer():GetPos():Distance(self:GetPos()) < 3200) then
+		if (LocalPlayer():GetPos():Distance(self:GetPos()) < 3200 and !self:GetNoDraw()) then
 			self:DrawModel()
 		end
 	end

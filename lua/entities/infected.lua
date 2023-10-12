@@ -27,7 +27,7 @@ local function lookForNextPlayer(ply)
 					end
 				end
 			else
-				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
+				if ((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() || v:IsNPC() || string.find(v:GetClass(),"npc_survivor")) and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex()) then
 					if (v:Health() > 1) then
 						table.insert(npcs, v)
 					end
@@ -1758,7 +1758,7 @@ function ENT:Think()
 							if (!string.find(self:GetModel(),"mud")) then
 								local anim
 								if (self:GetEnemy():GetModelScale() > 0.5) then
-									if (self:GetEnemy():IsNPC() and self:GetEnemy():Classify() == CLASS_HEADCRAB || self:GetEnemy():GetNWBool( "IsIncapped", false ) == true) then
+									if (self:GetEnemy():IsNPC() and self:GetEnemy():Classify() == CLASS_HEADCRAB || self:GetEnemy():GetNWBool( "IsIncapped", false ) == true || self:GetEnemy().Incap) then
 										anim = self:LookupSequence("AttackIncap_01") 
 									else
 										if (string.find(self:GetModel(),"female") and !string.find(self:GetModel(),"formal") and !string.find(self:GetModel(),"_tshirt_skirt") and !string.find(self:GetModel(),"_tanktop_jeans")) then

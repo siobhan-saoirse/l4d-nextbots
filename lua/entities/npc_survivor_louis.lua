@@ -4,7 +4,7 @@ AddCSLuaFile()
 ENT.Base 			= "npc_survivor_ellis"
 ENT.Type			= "nextbot"
 ENT.SurvivorName			= "Player.Manager"
-ENT.WeaponModel = "models/w_models/weapons/w_rifle_m16a2.mdl"
+ENT.WeaponModel = "models/w_models/weapons/w_autoshot_m4super.mdl"
 
 list.Set( "NPC", "louis", {
 	Name = "Louis",

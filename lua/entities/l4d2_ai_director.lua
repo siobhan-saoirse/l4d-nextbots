@@ -352,7 +352,7 @@ function ENT:IsNPC()
 end
 
 function ENT:IsNextBot()
-	return true
+	return false
 end
 
 function ENT:Health()
