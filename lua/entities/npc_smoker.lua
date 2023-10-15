@@ -16,10 +16,10 @@ local function getAllInfected()
 		end
 	end 
 	return npcs
-end
+end 
 local function lookForNextPlayer(ply)
 	local npcs = {}
-	if (math.random(1,16) == 1) then
+	if (math.random(1,16) == 1) then 
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), 120000 )) do
 			
 			if (engine.ActiveGamemode() == "teamfortress") then
@@ -414,7 +414,19 @@ function ENT:Initialize()
 				"SmokerZombie.Breathe",
 				"SmokerZombie.Breathe"
 			}
-			self:EmitSound(table.Random(voice))
+			if (string.find(self:GetModel(),"l4d1")) then
+				voice = {
+					"L4D1_SmokerZombie.Voice",
+					"L4D1_SmokerZombie.Breathe",
+					"L4D1_SmokerZombie.Breathe",
+					"L4D1_SmokerZombie.Breathe",
+					"L4D1_SmokerZombie.Breathe",
+					"L4D1_SmokerZombie.Breathe"
+				}
+				self:EmitSound(table.Random(voice))
+			else
+				self:EmitSound(table.Random(voice))
+			end
 		end
 
 	end)
@@ -1009,7 +1021,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
+			self:DirectPoseParametersAt((self:GetEnemy():GetBonePosition(1) - self:GetAngles():Forward())--[[ + Vector(0,0,math.max(bound1.z, bound2.z) - 30)]], "body", self:EyePos())
 			if (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1319,7 +1331,22 @@ function ENT:ChaseEnemy( options )
 			"SmokerZombie.Recognize",
 			"SmokerZombie.Recognize",
 		}
-		self:EmitSound(table.Random(alert))
+			if (string.find(self:GetModel(),"l4d1")) then
+				local alert = {
+					"L4D1_SmokerZombie.Alert",
+					"L4D1_SmokerZombie.Alert",
+					"L4D1_SmokerZombie.Alert",
+					"L4D1_SmokerZombie.Voice",
+					"L4D1_SmokerZombie.Voice",
+					"L4D1_SmokerZombie.Voice",
+					"L4D1_SmokerZombie.Voice",
+					"L4D1_SmokerZombie.Recognize",
+					"L4D1_SmokerZombie.Recognize",
+				}
+				self:EmitSound(table.Random(alert))
+			else
+				self:EmitSound(table.Random(alert))
+			end
 		self.EncounteredEnemy = true
 	end
 	while ( path:IsValid() and IsValid(self:GetEnemy()) and !self.ContinueRunning and !self.PlayingSequence and !self.PlayingSequence3 and !self.PlayingSequence2 ) do
@@ -1401,9 +1428,18 @@ function ENT:OnInjured( dmginfo )
 	end
 	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
 		if (dmginfo:IsDamageType(DMG_BURN)) then
-			self:EmitSound("smokerZombie.Pain")
+		
+			if (string.find(self:GetModel(),"l4d1")) then
+				self:EmitSound("L4D1_smokerZombie.Pain")
+			else
+				self:EmitSound("smokerZombie.Pain")
+			end
 		else
-			self:EmitSound("smokerZombie.PainShort")
+			if (string.find(self:GetModel(),"l4d1")) then
+				self:EmitSound("L4D1_smokerZombie.PainShort")
+			else
+				self:EmitSound("smokerZombie.PainShort")
+			end
 		end
 		self.PainSoundTime = CurTime() + 0.7
 	end
@@ -1515,7 +1551,22 @@ function ENT:OnKilled( dmginfo )
 					self:EmitSound("PlayerZombie.Die")
 					self:EmitSound("smokerZombie.Death")
 					self:EmitSound("SmokerZombie.Explode")
+					for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do
+						if (string.find(v:GetClass(),"survivor")) then
+							
+							timer.Create("Cough"..v:EntIndex(), 1.5, math.random(3,10), function()
+								v:EmitSound(v.SurvivorName.."_Cough0"..math.random(1,4))
+							end)
+							
+						elseif (v:IsPlayer()) then
 						
+							timer.Create("Cough"..v:EntIndex(), 1.5, math.random(3,10), function()
+								v:EmitSound(table.Random({"player/smoker/voice/idle/gas_cough_1.wav","player/smoker/voice/idle/gas_cough_gasp_1.wav","player/smoker/voice/idle/gas_gasp_1.wav","player/smoker/voice/idle/gas_gasp_2.wav"}),85,100,0.5,CHAN_VOICE)
+								v:TakeDamage(2)
+							end)
+							
+						end
+					end
 					self:BecomeRagdoll(dmginfo)
 				end	
 	end

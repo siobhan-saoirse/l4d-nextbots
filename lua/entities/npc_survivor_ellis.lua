@@ -96,9 +96,10 @@ ENT.Walking = false
 ENT.IsRightArmCutOff = false
 ENT.IsLeftArmCutOff = false
 ENT.SurvivorName = "Mechanic"
-ENT.WeaponModel = "models/w_models/weapons/w_rifle_ak47.mdl"
+ENT.WeaponModel = "models/w_models/weapons/w_sniper_mini14.mdl"
 
 hook.Add("EntityEmitSound","SurvivorHearSound",function(snd)
+	local sounddata = snd
 	if (string.StartWith(snd.SoundName,"(")) then
 		snd.SoundName = string.Replace(snd.SoundName, "(", ")")
 		return true
@@ -107,6 +108,38 @@ hook.Add("EntityEmitSound","SurvivorHearSound",function(snd)
 			if (string.find(snd.SoundName, "$survivor")) then
 				snd.SoundName = string.Replace(snd.SoundName, "$survivor", string.lower(string.Replace(snd.Entity.SurvivorName,"Player.","")))
 				return true
+			end
+			if (IsValid(sounddata.Entity) and (sounddata.Channel == CHAN_WEAPON or sounddata.Channel == CHAN_ITEM)) then
+				if (!sounddata.Entity.MaxWeaponSounds or sounddata.Entity.MaxWeaponSounds < 3) then
+					if (!sounddata.Entity.MaxWeaponSounds) then
+						sounddata.Entity.MaxWeaponSounds = 0
+					end
+					sounddata.Channel = CHAN_STATIC
+					if (sounddata.Entity.MaxWeaponSounds) then
+						sounddata.Entity.MaxWeaponSounds = sounddata.Entity.MaxWeaponSounds + 1
+					end
+				elseif (sounddata.Entity.MaxWeaponSounds > 2) then
+					sounddata.Entity:StopSound(sounddata.OriginalSoundName)
+					sounddata.Entity:StopSound(sounddata.SoundName)
+					sounddata.Entity.MaxWeaponSounds = 0
+					sounddata.Channel = CHAN_WEAPON
+					--sound.Play(sounddata.SoundName,sounddata.Entity:GetPos(),sounddata.Level,pitch)
+				end
+			elseif (IsValid(sounddata.Entity) and sounddata.Channel != CHAN_WEAPON and sounddata.Channel != CHAN_VOICE) then
+				if (!sounddata.Entity.MaxSounds or sounddata.Entity.MaxSounds < 3) then
+					if (!sounddata.Entity.MaxSounds) then
+						sounddata.Entity.MaxSounds = 0
+					end
+					sounddata.Channel = CHAN_STATIC
+					if (sounddata.Entity.MaxSoundsMaxWeaponSounds) then
+						sounddata.Entity.MaxSounds = sounddata.Entity.MaxSounds + 1
+					end
+				elseif (sounddata.Entity.MaxSounds > 4) then
+					sounddata.Entity:StopSound(sounddata.OriginalSoundName)
+					sounddata.Entity:StopSound(sounddata.SoundName)
+					sounddata.Entity.MaxSounds = 0
+					sound.Play(sounddata.SoundName,sounddata.Entity:GetPos(),sounddata.Level,pitch)
+				end
 			end
 			return true
 		elseif IsValid(snd.Entity) and snd.Entity:GetModel() and (string.StartWith(snd.Entity:GetClass(), "npc_survivor"))  and string.find(snd.SoundName, "step") then
@@ -145,6 +178,38 @@ hook.Add("EntityEmitSound","SurvivorHearSound",function(snd)
 				snd.Volume = 1
 			end
 			snd.Pitch = math.random(95,105)
+			if (IsValid(sounddata.Entity) and (sounddata.Channel == CHAN_WEAPON or sounddata.Channel == CHAN_ITEM) and (string.find(sounddata.SoundName,"fire") || string.find(sounddata.SoundName,"single") || string.find(sounddata.SoundName,"shoot"))) then
+				if (!sounddata.Entity.MaxWeaponSounds or sounddata.Entity.MaxWeaponSounds < 3) then
+					if (!sounddata.Entity.MaxWeaponSounds) then
+						sounddata.Entity.MaxWeaponSounds = 0
+					end
+					sounddata.Channel = CHAN_STATIC
+					if (sounddata.Entity.MaxWeaponSounds) then
+						sounddata.Entity.MaxWeaponSounds = sounddata.Entity.MaxWeaponSounds + 1
+					end
+				elseif (sounddata.Entity.MaxWeaponSounds > 3) then
+					sounddata.Entity:StopSound(sounddata.OriginalSoundName)
+					sounddata.Entity:StopSound(sounddata.SoundName)
+					sounddata.Entity.MaxWeaponSounds = 0
+					sound.Play(sounddata.SoundName,sounddata.Entity:GetPos(),sounddata.Level,pitch)
+				end
+			elseif (IsValid(sounddata.Entity) and sounddata.Channel != CHAN_WEAPON and sounddata.Channel != CHAN_VOICE) then
+				if (!sounddata.Entity.MaxSounds or sounddata.Entity.MaxSounds < 3) then
+					if (!sounddata.Entity.MaxSounds) then
+						sounddata.Entity.MaxSounds = 0
+					end
+					sounddata.Channel = CHAN_STATIC
+					if (sounddata.Entity.MaxSoundsMaxWeaponSounds) then
+						sounddata.Entity.MaxSounds = sounddata.Entity.MaxSounds + 1
+					end
+				elseif (sounddata.Entity.MaxSounds > 4) then
+					sounddata.Entity:StopSound(sounddata.OriginalSoundName)
+					sounddata.Entity:StopSound(sounddata.SoundName)
+					sounddata.Entity.MaxSounds = 0
+					sound.Play(sounddata.SoundName,sounddata.Entity:GetPos(),sounddata.Level,pitch)
+				end
+			end
+
 			return true
 		end
 	end
@@ -152,7 +217,19 @@ end)
 
 function ENT:Initialize()
 
-	game.AddParticles( "particles/boomer_fx.pcf" )
+	game.AddParticles( "particles/survivor_fx.pcf" )
+	game.AddParticles( "particles/weapon_fx.pcf" )
+	game.AddParticles( "particles/weapon_fx_newbrasseject.pcf" )
+	game.AddParticles( "particles/weapon_fx_river.pcf" )
+	game.AddParticles( "particles/laststand.pcf" )
+	game.AddParticles( "particles/military_artilliery_impacts.pcf" )
+	game.AddParticles( "particles/tanker_explosion.pcf" )
+	game.AddParticles( "particles/item_fx.pcf" )
+	game.AddParticles( "particles/fire_fx.pcf" )
+	game.AddParticles( "particles/fire_infected_fx.pcf" )
+	game.AddParticles( "particles/burning_fx.pcf" )
+	game.AddParticles( "particles/impact_fx.pcf" )
+	game.AddParticles( "particles/vehicle_fx.pcf" )
 	if SERVER then
 		if (!self.DontReplaceModel) then
 			self:SetModel( "models/survivors/survivor_"..string.Replace(string.Replace(self.SurvivorName,"Player.",""),"Teengirl","Teenangst")..".mdl" )
@@ -203,6 +280,8 @@ function ENT:Initialize()
 					self.Weapon = axe
 							if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
 								self.Clip = 30
+							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+								self.Clip = 15
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 								self.Clip = 30
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -298,7 +377,7 @@ function ENT:PlaySequenceAndMove(seq, options, callback)
 			end
 			vec:Rotate(self:GetAngles() + angles)
 			self:SetAngles(self:LocalToWorldAngles(angles))
-			if (self:IsOnGround()) then
+			if (self:IsOnGround() and self:IsInWorld()) then
 				previousPos = self:GetPos() + vec*self:GetModelScale()
 				self:SetPos(previousPos)
 			end
@@ -501,6 +580,8 @@ function ENT:HaveEnemy()
 
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Sniper"))  ) 
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -516,6 +597,8 @@ function ENT:HaveEnemy()
 						else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then											
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Sniper"))  )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -535,6 +618,8 @@ function ENT:HaveEnemy()
 					if (self:Health()*2<100) then
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then										
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Sniper"))  ) )	
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -549,6 +634,8 @@ function ENT:HaveEnemy()
 					else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then										
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Sniper"))  ) )	
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -724,10 +811,11 @@ function ENT:RunBehaviour()
 		if !self.ContinueRunning then 
 			
 			if ( !self.ContinueRunning and self:HaveEnemy() and !GetConVar("ai_disabled"):GetBool() ) then
-				-- Now that we have an enemy, the code in this block will run
+				-- Now that we have an enemy, the code in this block will run 
 				if (self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_rifle")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_PISTOL"))
 				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_smg")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_injured_smg"))
-				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_shotgun")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("Idle_Injured_PumpShotgun"))) then
+				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_shotgun")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("Idle_Injured_PumpShotgun")) 
+				|| self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("idle_standing_sniper")) || self:GetSequenceActivity(self:GetSequence()) == self:GetSequenceActivity(self:LookupSequence("Idle_Injured_sniper"))) then
 					self.PlayingSequence2 = false	
 					self.PlayingSequence3 = false	
 					
@@ -735,6 +823,8 @@ function ENT:RunBehaviour()
 
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Sniper"))  ) 							
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("LimpRun_Rifle"))  ) 
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -750,6 +840,8 @@ function ENT:RunBehaviour()
 						else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then									
+									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Sniper"))  ) 							
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Run_Rifle"))  ) 
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -773,6 +865,8 @@ function ENT:RunBehaviour()
 					if (self:Health()*2<100) then
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Sniper"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -787,6 +881,8 @@ function ENT:RunBehaviour()
 					else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Sniper"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -904,7 +1000,7 @@ function ENT:Think()
 					elseif (string.find(v:GetModel(),"teenangst") || string.find(v:GetModel(),"producer") || string.find(self:GetModel(),"manager")) then
 						axe:SetModel("models/w_models/weapons/w_smg_uzi.mdl")
 					elseif (string.find(v:GetModel(),"mechanic")) then
-						axe:SetModel("models/w_models/weapons/w_rifle_ak47.mdl")
+						axe:SetModel("models/w_models/weapons/w_sniper_mini14.mdl")
 					else
 						axe:SetModel("models/w_models/weapons/w_desert_eagle.mdl")
 					end
@@ -935,7 +1031,7 @@ function ENT:Think()
 					elseif (string.find(self:GetModel(),"teenangst") || string.find(self:GetModel(),"producer") || string.find(self:GetModel(),"manager")) then
 						axe:SetModel("models/w_models/weapons/w_smg_uzi.mdl")
 					elseif (string.find(self:GetModel(),"mechanic")) then
-						axe:SetModel("models/w_models/weapons/w_rifle_ak47.mdl")
+						axe:SetModel("models/w_models/weapons/w_sniper_mini14.mdl")
 					else
 						axe:SetModel("models/w_models/weapons/w_desert_eagle.mdl")
 					end
@@ -972,7 +1068,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
+			self:DirectPoseParametersAt((self:GetEnemy():GetBonePosition(1) - self:GetAngles():Forward())--[[ + Vector(0,0,math.max(bound1.z, bound2.z) - 30)]], "body", self:EyePos())
 		end
 		if (self.Idling and self:GetCycle() == 1 and !self.PlayingSequence3 and IsValid(self.Weapon)) then
 			self:SetCycle(0)
@@ -982,7 +1078,7 @@ function ENT:Think()
 									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SMG")) 
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN"))	
 								else
 									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))
 								end
@@ -993,6 +1089,8 @@ function ENT:Think()
 			if (!self.HaventLandedYet) then 
 				self:SetCycle(0)
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
+									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
 									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:StartActivity( self:GetSequenceActivity(self:LookupSequence("jump_Rifle_01"))  )
@@ -1066,6 +1164,10 @@ function ENT:Think()
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 									
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_SMG"))  ) )
+								
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+									
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_Sniper"))  ) )
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_injured_PUMPSHOTGUN"))  ) )
@@ -1075,6 +1177,9 @@ function ENT:Think()
 					else
 								if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then											
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+									
+									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Sniper"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 									self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("idle_standing_Rifle"))  ) )
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
@@ -1115,8 +1220,8 @@ function ENT:Think()
 									
 								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_SHOTGUN")) 
-								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
-									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_PISTOL"))
+								elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+									mad = self:GetSequenceActivity(self:LookupSequence("idle_standing_Sniper"))
 								end
 			local mad2 = self:SelectRandomSequence(mad) 
 			self:StartActivity( mad )
@@ -1173,12 +1278,79 @@ function ENT:Think()
 							if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Rifle"))
 								self.ReloadTime = CurTime() + 3.0
+								timer.Simple(3.0, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Rifle"))
 								self.ReloadTime = CurTime() + 3.0
+								timer.Simple(3.0, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
+							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+								self:AddGestureSequence(self:LookupSequence("Reload_Standing_SNIPER"))
+								self.ReloadTime = CurTime() + 3.5
+								timer.Simple(3.5, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_SMG"))
 								self.ReloadTime = CurTime() + 3.5
+								timer.Simple(3.5, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Shotgun_start"))
 								timer.Create("ReloadLoop"..self:EntIndex(), 0.4, 8, function()
@@ -1191,24 +1363,42 @@ function ENT:Think()
 									end)
 								end)
 								self.ReloadTime = CurTime() + 3.8
+								timer.Simple(3.8, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
 							else
 								self:AddGestureSequence(self:LookupSequence("Reload_Standing_Pistol"))
 								self.ReloadTime = CurTime() + 3.0
+								timer.Simple(3.0, function()
+								
+									if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
+										self.Clip = 30
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+										self.Clip = 15
+									elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
+										self.Clip = 50
+									else
+										self.Clip = 7
+									end
+									
+									
+								end)
 							end
-						timer.Simple(3.0, function()
-						
-							if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
-								self.Clip = 30
-							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
-								self.Clip = 30
-							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
-								self.Clip = 50
-							else
-								self.Clip = 7
-							end
-							
-							
-						end)
 					end
 				end
 				if (self:GetMoveType() != MOVETYPE_NONE and IsValid(self:GetEnemy()) and self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2 + 1000 or self.PlayingSequence and !self.ContinueRunning) then
@@ -1226,7 +1416,8 @@ function ENT:Think()
 								})
 								
 							end
-						else
+						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+
 							self.Weapon:FireBullets({
 								Attacker = self,
 								Num = 1,
@@ -1235,26 +1426,39 @@ function ENT:Think()
 								Spread = Vector(math.Rand(-5,5),math.Rand(-5,5),math.Rand(-5,5)),
 								Damage = 15
 							})
+						else
+							self.Weapon:FireBullets({
+								Attacker = self,
+								Num = 1,
+								Dir = ((self:GetEnemy():GetPos()) - self:EyePos()) + Vector(math.Rand(-5,5),math.Rand(-5,5),math.Rand(-5,5)),
+								Src = self:GetPos() + Vector(0,0,20) * 4,
+								Spread = Vector(math.Rand(-5,5),math.Rand(-5,5),math.Rand(-5,5)),
+								Damage = 5
+							})
 						end
 						if (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_ak47.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_RIFLE"))
-							self.Weapon:EmitSound("AK47.Fire")
+							self:EmitSound("AK47.Fire")
 							self.FireTime = CurTime() + 0.12
+						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_RIFLE"))
+							self:EmitSound("HuntingRifle.Fire")
+							self.FireTime = CurTime() + 0.25
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_RIFLE"))
-							self.Weapon:EmitSound("Rifle.Fire")
+							self:EmitSound("Rifle.Fire")
 							self.FireTime = CurTime() + 0.08
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_SMG"))
-							self.Weapon:EmitSound("SMG.Fire")
-							self.FireTime = CurTime() + 0.06
+							self:EmitSound("SMG.Fire")
+							self.FireTime = CurTime() + 0.05
 						elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_autoshot_m4super.mdl") then
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_xm1014"))
-							self.Weapon:EmitSound("AutoShotgun.Fire")
-							self.FireTime = CurTime() + 0.28
+							self:EmitSound("AutoShotgun.Fire")
+							self.FireTime = CurTime() + 0.25
 						else
 							self:AddGestureSequence(self:LookupSequence("Shoot_Standing_Pistol"))
-							self.Weapon:EmitSound("Pistol.Fire")
+							self:EmitSound("Pistol.Fire")
 							self.FireTime = CurTime() + 0.35
 						end
 						self.Clip = self.Clip - 1
@@ -1277,7 +1481,7 @@ function ENT:Think()
 							timer.Simple(0.2, function()
 								for k,v in ipairs(ents.FindInSphere(self:GetPos(),self.AttackRange)) do
 									
-									if (IsValid(v) and (v:IsPlayer() or (v:IsNextBot()) or v:IsNPC()) and !string.find(v:GetClass(),"survivor") and !v.PlayingSequence3 and !v.PlayingSequence2) then
+									if (IsValid(v) and (v:IsPlayer() or (v:IsNextBot()) or v:IsNPC()) and !string.find(v:GetClass(),"survivor")) then
 										self:EmitSound(
 											"Weapon.HitInfected",
 											85, 100
@@ -1285,11 +1489,15 @@ function ENT:Think()
 										local dmginfo = DamageInfo()
 										dmginfo:SetAttacker(self)
 										dmginfo:SetInflictor(self)
-										dmginfo:SetDamageType(bit.bor(DMG_CLUB,DMG_SLASH))
-										dmginfo:SetDamage(5)
+										if (!v.PlayingSequence3 and !v.PlayingSequence2) then
+											dmginfo:SetDamageType(bit.bor(DMG_CLUB,DMG_SLASH))
+										else
+											dmginfo:SetDamageType(DMG_SLASH)
+										end
+										dmginfo:SetDamage(15)
 										if (GetConVar("skill"):GetInt() > 1) then
 											dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
-										end
+										end 
 										v:TakeDamageInfo(dmginfo) 
 									end
 
@@ -1449,10 +1657,8 @@ function ENT:ChaseEnemy( options )
 			end
 		end
 		if (self.PlayingSequence2 or self.PlayingSequence3) then return false end
-		if ( path:GetAge() > 0.02 ) then					-- Since we are following the player we have to constantly remake the path
-			path:Compute(self, pos)-- Compute the path towards the enemy's position again
-			path:Update( self )								-- This function moves the bot along the path
-		end
+		path:Compute(self, pos)-- Compute the path towards the enemy's position again
+		path:Update( self )								-- This function moves the bot along the path
 		if (self:GetEnemy():IsPlayer()) then
 			if (math.random(1,80) == 1) then
 				debugoverlay.Text( self:GetPos(), "I can see you, "..self:GetEnemy():GetName(), 3,false )
@@ -1501,8 +1707,13 @@ function ENT:OnInjured( dmginfo )
 	if ((!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
 		if (self.Incap) then
 			if (self:GetNoDraw() == true) then
-				self:EmitSound(self.SurvivorName.."_ScreamWhilePounced0"..math.random(1,7)) 
-				self.PainSoundTime = CurTime() + 1.5
+				if (self:GetEnemy():GetClass() == "npc_charger") then
+					self:EmitSound(self.SurvivorName.."_GrabbedByCharger0"..math.random(1,9)) 
+				self.PainSoundTime = CurTime() + 5.0
+				else
+					self:EmitSound(self.SurvivorName.."_ScreamWhilePounced0"..math.random(1,7)) 
+					self.PainSoundTime = CurTime() + 3.0
+				end
 			else
 				if (string.find(dmginfo:GetAttacker():GetClass(),"tank")) then
 					self:EmitSound(self.SurvivorName.."_TankPound0"..math.random(1,6))	
@@ -1514,9 +1725,16 @@ function ENT:OnInjured( dmginfo )
 		else
 			if ((string.find(dmginfo:GetAttacker():GetClass(),"survivor") or dmginfo:GetAttacker():IsPlayer()) and !self.Incap) then
 				self:EmitSound(self.SurvivorName.."_FriendlyFire"..table.Random({"01","02","03","04","05","06","07","08","09"}))
+				self.PainSoundTime = CurTime() + 3.0
 			else
 				if (self:GetNoDraw() == true) then
-				self:EmitSound(self.SurvivorName.."_ScreamWhilePounced0"..math.random(1,7)) 
+					if (self:GetEnemy():GetClass() == "npc_charger") then
+						self:EmitSound(self.SurvivorName.."_GrabbedByCharger0"..math.random(1,9)) 
+						self.PainSoundTime = CurTime() + 5.0
+					else
+						self:EmitSound(self.SurvivorName.."_ScreamWhilePounced0"..math.random(1,7)) 
+						self.PainSoundTime = CurTime() + 3.0
+					end
 				else
 					if (self:Health()*2<100) then
 						self:EmitSound(self.SurvivorName.."_HurtCritical0"..math.random(1,9))
@@ -1527,9 +1745,9 @@ function ENT:OnInjured( dmginfo )
 							self:EmitSound(self.SurvivorName.."_HurtMinor0"..math.random(1,6))
 						end
 					end
+					self.PainSoundTime = CurTime() + 1.5
 				end
 			end
-			self.PainSoundTime = CurTime() + 1.5
 		end
 	end
 	if ((string.find(dmginfo:GetAttacker():GetClass(),"survivor") or dmginfo:GetAttacker():IsPlayer()) and !self.Incap) then
@@ -1557,7 +1775,7 @@ function ENT:OnInjured( dmginfo )
 	if (dmginfo:GetAttacker() != nil and (dmginfo:GetAttacker():IsNPC() || dmginfo:GetAttacker():IsNextBot() && !string.find(dmginfo:GetAttacker():GetClass(),"npc_survivor"))) then 
 		self:SetEnemy(dmginfo:GetAttacker())
 	end
-	if (!self.Incap and (dmginfo:IsDamageType(DMG_BLAST) or string.find(dmginfo:GetAttacker():GetClass(),"npc_tank")) and !self.PlayingSequence2 and !self.PlayingSequence) then
+	if (!self.Incap and ((dmginfo:IsDamageType(DMG_BLAST) or string.find(dmginfo:GetAttacker():GetClass(),"npc_tank")) and !self.PlayingSequence2 and !self.PlayingSequence)) then
 		local selanim = table.Random({"Shoved_Backward","Shoved_Forward","Shoved_Leftward","Shoved_Rightward"})
 		local anim = self:LookupSequence(selanim)
 		self:PlaySequenceAndMove(anim)
@@ -1592,6 +1810,9 @@ function ENT:OnInjured( dmginfo )
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_rifle_m16a2.mdl") then
 								self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) 
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Rifle"))  ) )
+							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_sniper_mini14.mdl") then
+								self:PlayActivityAndMove( self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Sniper"))  ) 
+								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_Sniper"))  ) )
 							elseif (self.Weapon:GetModel() == "models/w_models/weapons/w_smg_uzi.mdl") then
 								
 								self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Idle_Standing_SMG"))  ) )
@@ -1624,9 +1845,9 @@ function ENT:OnInjured( dmginfo )
 		end
 	end
 	if (!self.Incap and !dmginfo:IsDamageType(DMG_CLUB) and !string.find(dmginfo:GetAttacker():GetClass(),"hunter")) then
-		dmginfo:ScaleDamage(0.4)
+		dmginfo:ScaleDamage(0.7)
 	elseif (self.Incap) then
-		dmginfo:ScaleDamage(2)
+		dmginfo:ScaleDamage(1)
 	end
 end
 function ENT:Touch( entity )

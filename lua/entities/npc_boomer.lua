@@ -424,7 +424,12 @@ function ENT:Initialize()
 	timer.Create("PlaySomeIdleSounds"..self:EntIndex(), math.random(2,5), 0, function()
 	
 		if (self:Health() > 0 and !GetConVar("ai_disabled"):GetBool()) then
-			self:EmitSound("BoomerZombie.Voice")
+		
+			if (string.find(self:GetModel(),"l4d1")) then
+				self:EmitSound("L4D1_BoomerZombie.Voice")
+			else
+				self:EmitSound("BoomerZombie.Voice")
+			end
 		end
 
 	end)
@@ -465,6 +470,13 @@ end
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
 	if (ent != nil and ent:IsNextBot() and !string.find(ent:GetClass(),"survivor")) then return end
+	if (ent ~= self.Enemy) then
+		if (string.find(self:GetModel(),"l4d1")) then
+			self:EmitSound(table.Random({"L4D1_BoomerZombie.Alert","L4D1_BoomerZombie.Rage"}))
+		else
+			self:EmitSound(table.Random({"BoomerZombie.Alert","BoomerZombie.Rage"}))
+		end
+	end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
@@ -934,7 +946,7 @@ function ENT:Think()
 		local cycle = self:GetCycle()
 		if self.lastCycle > cycle then return end 
 		if self.lastCycle == cycle and cycle == 1 then return end
-		self.lastCycle = cycle
+		self.lastCycle = cycle 
 		if isfunction(self.callback) then
 			self.PlayingSequence = true
 			local res = self.callback(self, cycle)
@@ -945,7 +957,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
+			self:DirectPoseParametersAt((self:GetEnemy():GetBonePosition(1) - self:GetAngles():Forward())--[[ + Vector(0,0,math.max(bound1.z, bound2.z) - 30)]], "body", self:EyePos())
 			if (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end
@@ -1118,7 +1130,11 @@ function ENT:Think()
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
 						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self) and !self.ReadyToVomit) then
-							self:EmitSound("BoomerZombie.Warn")
+							if (string.find(self:GetModel(),"l4d1")) then
+								self:EmitSound("L4D1_BoomerZombie.Warn")
+							else
+								self:EmitSound("BoomerZombie.Warn")
+							end
 							self.ReadyToVomit = true
 							self.PlayingSequence3 = true
 							timer.Simple(1, function()
@@ -1375,9 +1391,17 @@ function ENT:OnInjured( dmginfo )
 	end
 	if (self:Health() > 0 and (!self.PainSoundTime or CurTime() > self.PainSoundTime)) then
 		if (dmginfo:IsDamageType(DMG_BURN) || dmginfo:IsDamageType(DMG_CLUB)) then
-			self:EmitSound("BoomerZombie.Pain")
+			if (string.find(self:GetModel(),"l4d1")) then
+				self:EmitSound("L4D1_BoomerZombie.Pain")
+			else
+				self:EmitSound("BoomerZombie.Pain")
+			end
 		else
-			self:EmitSound("BoomerZombie.PainShort")
+			if (string.find(self:GetModel(),"l4d1")) then
+				self:EmitSound("L4D1_BoomerZombie.PainShort")
+			else
+				self:EmitSound("BoomerZombie.PainShort")
+			end
 		end
 		self.PainSoundTime = CurTime() + 0.7
 	end

@@ -1276,15 +1276,19 @@ function ENT:Think()
 							self.loco:JumpAcrossGap(self:GetEnemy():GetPos(), vel)
 							timer.Create("WaitUntilIPouncedonMyEnemy"..self:EntIndex(), 0, 0, function()
 								if (self:IsOnGround() and !self.Pounced) then
-									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-										if (v:EntIndex() == self.Enemy:EntIndex() and !v:GetNoDraw()) then
+									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 120)) do
+										if (v:EntIndex() != self.Enemy:EntIndex() and !v:GetNoDraw()) then
+											if (string.find(v:GetClass(),"survivor")) then
+												v:PlaySequenceAndMove("Shoved_Backward")
+											end 
+										elseif (v:EntIndex() == self.Enemy:EntIndex() and !v:GetNoDraw()) then
 											if (!self.Pounced) then
 
 												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
 													self:SetCollisionGroup(COLLISION_GROUP_NPC)
 												end
 												self:EmitSound("HunterZombie.Pounce.Hit")
-												if (self.Enemy:IsPlayer()) then
+												if (self.Enemy:IsPlayer()) then 
 													self.Enemy:SendLua('LocalPlayer():EmitSound("Event.HunterPounce")')
 												end
 												local selanim = self:LookupSequence("melee_pounce")

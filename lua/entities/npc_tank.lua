@@ -1055,7 +1055,7 @@ function ENT:Think()
 	if SERVER then 
 		if (IsValid(self:GetEnemy())) then
 			local bound1, bound2 = self:GetCollisionBounds()
-			self:DirectPoseParametersAt(self:GetEnemy():GetPos() + Vector(0,0,math.max(bound1.z, bound2.z) - 30), "body", self:EyePos())
+			self:DirectPoseParametersAt((self:GetEnemy():GetBonePosition(1) - self:GetAngles():Forward())--[[ + Vector(0,0,math.max(bound1.z, bound2.z) - 30)]], "body", self:EyePos())
 			if (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
 				self.Enemy = nil
 			end

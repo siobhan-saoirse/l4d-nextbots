@@ -1,0 +1,6 @@
+{
+"title" : "Left 4 Dead Nextbots",
+"type" : "npc",
+"tags" : ["movie","scenic"],
+"ignore" : ["*.psd", "*.vcproj", "*.svn*", "*.md", ".gitattributes", "scripts/*"]
+}
