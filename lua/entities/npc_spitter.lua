@@ -683,7 +683,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
+					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
 							"Weapon_Knife.Hit",

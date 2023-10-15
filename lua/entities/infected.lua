@@ -6,6 +6,7 @@ if CLIENT then
 end
 local function getAllInfected()
 	local npcs = {}
+	if (math.random(1,25) == 1) then
 		for k,v in ipairs(ents.GetAll()) do
 			if (v:GetClass() == "infected") then
 				if (v:Health() > 0) then
@@ -13,6 +14,7 @@ local function getAllInfected()
 				end
 			end
 		end
+	end
 	return npcs
 end
 local function lookForNextPlayer(ply)
@@ -332,12 +334,6 @@ local modeltbl = {
 	"models/infected/common_male_riot.mdl",
 	"models/infected/common_male_riot.mdl",
 	"models/infected/common_male_riot.mdl",
-	"models/infected/common_male_clown.mdl",
-	"models/infected/common_male_clown.mdl",
-	"models/infected/common_male_clown.mdl",
-	"models/infected/common_male_clown.mdl",
-	"models/infected/common_male_clown.mdl",
-	"models/infected/common_male_clown.mdl",
 	"models/infected/common_male_formal.mdl",
 	"models/infected/common_male_jimmy.mdl",
 	--"models/infected/common_male_ceda_l4d1.mdl",
@@ -895,18 +891,24 @@ function ENT:HandleStuck()
 	--
 	-- Clear the stuck status
 	--
-	--[[
+	
 	if (IsValid(self:GetEnemy())) then
-		local pos = self:FindSpot("near", {pos=self:GetEnemy():GetPos(),radius = 12000,type="hiding",stepup=800,stepdown=800})
-		self:SetPos(pos)
-	end]]
-	local dmginfo = DamageInfo()
-	dmginfo:SetAttacker(self)
-	dmginfo:SetInflictor(self)
-	dmginfo:SetDamageType(DMG_CRUSH)
-	dmginfo:SetDamage(self:Health())
-	self:OnKilled(dmginfo)
-	self.loco:ClearStuck() 
+		
+		if (!self.PlayingSequence2 and !self.PlayingSequence3) then
+			self:SetCycle(0)
+			self:PlayActivityAndMove(self:GetSequenceActivity(self:LookupSequence("Idle_UnableToReachTarget_01a")))
+		end
+		self.loco:ClearStuck()
+		
+	else
+		local dmginfo = DamageInfo()
+		dmginfo:SetAttacker(self)
+		dmginfo:SetInflictor(self)
+		dmginfo:SetDamageType(DMG_CRUSH)
+		dmginfo:SetDamage(self:Health())
+		self:OnKilled(dmginfo)
+		self.loco:ClearStuck()
+	end
 end
 
 
@@ -1415,7 +1417,7 @@ function ENT:RunBehaviour()
 				end
 				self.loco:FaceTowards(self:GetEnemy():GetPos())	-- Face our enemy
 				self.loco:SetDesiredSpeed( 280 )		-- Set the speed that we will be moving at. Don't worry, the animation will speed up/slow down to match
-				self.loco:SetAcceleration(1000)
+				self.loco:SetAcceleration(150)
 				if (!self.PlayingSequence2 and !self.PlayingSequence3) then
 					self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )
 				end
@@ -1527,13 +1529,13 @@ function ENT:Think()
 					if (isbeingMobbed(self:GetEnemy())) then
 						if (!self:GetEnemy().IsMobbed) then
 							self.MobbedMusic = CreateSound(self:GetEnemy(),"Event.Mobbed")
-							self.MobbedMusic:Play()
+							--self.MobbedMusic:Play()
 							self:GetEnemy().IsMobbed = true
 						end
 					else
 						if (self:GetEnemy().IsMobbed) then
 							if (self.MobbedMusic != nil) then
-								self.MobbedMusic:FadeOut(2)
+								--self.MobbedMusic:FadeOut(2)
 							end
 							self:GetEnemy().IsMobbed = false
 						end
@@ -1624,8 +1626,13 @@ function ENT:Think()
 						anim = self:LookupSequence("landing0"..math.random(2,4))
 					end
 				end
+				self.PlayingSequence2 = false
+				self.PlayingSequence3 = false
 				self:PlaySequenceAndMove(anim)
 				timer.Simple(self:SequenceDuration(anim) - 0.5,function()
+					self.PlayingSequence2 = false
+					self.PlayingSequence3 = false
+					self.loco:SetAcceleration(1000)
 					if (self:IsOnGround()) then
 						if (self:GetEnemy() != nil) then
 							if (string.find(self:GetModel(),"mud")) then
@@ -1646,7 +1653,7 @@ function ENT:Think()
 			end
 		end
 		if (self.Ready and self:GetCycle() == 0 and self:GetActivity() == -1 and !(self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_01")) && self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then
-			self:PlayActivityAndWait( self:GetActivity() )
+			self:PlayActivityAndMove( self:GetActivity() )
 		elseif (self.Ready and !self.Idling and self:GetEnemy() == nil and (self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("run_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("mudguy_run")))) then 
 
 			local mad = self:GetSequenceActivity(self:LookupSequence("idle_neutral_01"))
@@ -1715,7 +1722,7 @@ function ENT:Think()
 			--end
 			if (IsValid(self.Door) and self:IsOnGround() and self.Door:GetPos():Distance(self:GetPos()) < self.AttackRange) then
 				self.loco:SetDesiredSpeed( 0 )
-				self.loco:SetAcceleration(-270)
+				self.loco:SetAcceleration(0)
 			end
 			if (!IsValid(self.Door) and self.WasAttackingDoor) then
 
@@ -1779,8 +1786,6 @@ function ENT:Think()
 								self.MeleeAttackDelay = CurTime() + self:SequenceDuration(selanim) 
 								self:AddGesture(anim)
 								self.loco:ClearStuck() 
-								self:SetPoseParameter("move_x",0)
-								self:SetPoseParameter("move_y",0)
 							end
 							self.DontWannaUseSameSequence = false
 						end
@@ -1795,24 +1800,26 @@ function ENT:Think()
 							self.MeleeAttackDelay = CurTime() + self:SequenceDuration(selanim)
 							self:AddGesture(anim,true)
 							self.loco:ClearStuck() 
-							if (!self.PlayingSequence3 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02"))) then
-								if (IsValid(self:GetEnemy())) then
-									if (self.loco:IsUsingLadder()) then
-										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
-									else
-										if (self:IsOnGround() and self.Ready) then
-											if (string.find(self:GetModel(),"mud")) then
-						
-												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
-						
-											else
-												self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
+							if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange) then 
+								if (!self.PlayingSequence3 and self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("melee_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("AttackIncap_01")) or self:GetActivity() == self:GetSequenceActivity(self:LookupSequence("female_melee_noel02"))) then
+									if (IsValid(self:GetEnemy())) then
+										if (self.loco:IsUsingLadder()) then
+											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("Ladder_Ascend"))  ) )			-- Set the animation
+										else
+											if (self:IsOnGround() and self.Ready) then
+												if (string.find(self:GetModel(),"mud")) then
+							
+													self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("mudguy_run"))  ) )			-- Set the animation
+							
+												else
+													self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("run_01"))  ) )			-- Set the animation
+												end
 											end
 										end
-									end
-								else
-									if (self:IsOnGround() and self.Ready) then
-										self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("shamble_01")) ) ) 
+									else
+										if (self:IsOnGround() and self.Ready) then
+											self:ResetSequence( self:SelectWeightedSequence(self:GetSequenceActivity(self:LookupSequence("shamble_01")) ) ) 
+										end
 									end
 								end
 							end
@@ -1821,7 +1828,7 @@ function ENT:Think()
 				end
 				if (self:IsOnGround() and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange and self:GetEnemy():Health() > 0 or self.PlayingSequence and !self.ContinueRunning) then
 					self.loco:SetDesiredSpeed( 0 )
-					self.loco:SetAcceleration(-270)
+					self.loco:SetAcceleration(0)
 				elseif (!self.ContinueRunning and !self:IsOnFire() and self:IsOnGround() and (self:GetEnemy():GetPos():Distance(self:GetPos()) > self.AttackRange) and self:GetEnemy():Health() > 0 and !self.PlayingSequence3) then
 					if (!self.PlayingSequence3 and self.Ready and self.MeleeAttackDelay and CurTime() < self.MeleeAttackDelay) then
 						if (CurTime() < self.MeleeAttackDelay) then
@@ -1852,11 +1859,11 @@ function ENT:Think()
 						end
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
-							self.loco:SetDesiredSpeed( 300  )
-							self.loco:SetAcceleration(1000 )
+							self.loco:SetDesiredSpeed( 250  )
+							self.loco:SetAcceleration(150 )
 						else
-							self.loco:SetDesiredSpeed(300 * self:GetModelScale())
-							self.loco:SetAcceleration(1000 * self:GetModelScale())
+							self.loco:SetDesiredSpeed(250 * self:GetModelScale())
+							self.loco:SetAcceleration(150 * self:GetModelScale())
 						end
 					end
 				end

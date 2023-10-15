@@ -169,7 +169,7 @@ hook.Add("EntityEmitSound","hunterHearSound",function(snd)
 				if (v:GetClass() == "npc_hunter_l4d" and !IsValid(v:GetEnemy()) and v.Ready and !v.ContinueRunning and !v:IsOnFire() and !snd.Entity:IsFlagSet(FL_NOTARGET) and snd.Entity:Visible(v)) then
 					v:SetEnemy(snd.Entity)
 				end
-			end
+			end 
 		end
 	end
 end)
@@ -748,7 +748,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
+					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
 							"Weapon_Knife.Hit",
@@ -1262,7 +1262,7 @@ function ENT:Think()
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3 and !self.Pounced) then
-						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
+						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self) and !self:GetEnemy():GetNoDraw()) then
 							self:EmitSound("HunterZombie.Pounce")
 							
 							local shouldvegoneforthehead = self:GetEnemy():EyePos()
@@ -1277,7 +1277,7 @@ function ENT:Think()
 							timer.Create("WaitUntilIPouncedonMyEnemy"..self:EntIndex(), 0, 0, function()
 								if (self:IsOnGround() and !self.Pounced) then
 									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-										if (v:EntIndex() == self.Enemy:EntIndex()) then
+										if (v:EntIndex() == self.Enemy:EntIndex() and !v:GetNoDraw()) then
 											if (!self.Pounced) then
 
 												if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.AttackRange2) then
@@ -1301,6 +1301,9 @@ function ENT:Think()
 												local this = self
 												local animent = ents.Create( 'base_gmodentity' ) -- The entity used for the death animation	
 												animent:SetModel("models/survivors/anim_test.mdl")
+												if (string.find(self:GetEnemy():GetModel(),"survivor")) then
+													animent:SetModel(self:GetEnemy():GetModel())
+												end
 												animent:SetSkin(self:GetSkin())
 												animent:SetPos(self:GetPos())
 												animent:SetAngles(self:GetAngles() + Angle(0,180,0))

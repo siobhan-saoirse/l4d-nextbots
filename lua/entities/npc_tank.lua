@@ -25,18 +25,9 @@ local function lookForNextPlayer(ply)
 			range = 12000
 		end
 		for k,v in ipairs(ents.FindInSphere( ply:GetPos(), range )) do
-			
-			if (engine.ActiveGamemode() == "teamfortress") then
-				if (v:IsTFPlayer() and !v:IsNextBot() and v:EntIndex() != ply:EntIndex() and ply:Visible(v)) then
-					if (v:Health() > 1) then
-						table.insert(npcs, v)
-					end
-				end
-			else
-				if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC() && !v:IsNextBot() || v:IsNextBot() && string.find(v:GetClass(),"survivor")) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
-					if (v:Health() > 1) then
-						table.insert(npcs, v)
-					end
+			if (((v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool()) || v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:EntIndex() != ply:EntIndex() ) then
+				if (v:Health() > 1) then
+					table.insert(npcs, v)
 				end
 			end
 		end
@@ -138,12 +129,12 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 						
 					if (!string.find(snd.Entity:GetSequenceName(snd.Entity:GetSequence()),"run_")) then
 						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_BODY
+						snd.Channel = CHAN_STATIC
 						snd.Volume = 0.85
 						snd.SoundLevel = 95
 					else
 						snd.SoundName = string.Replace(snd.SoundName, snd.SoundName, "player/footsteps/tank/walk/tank_walk0"..math.random(1,6)..".wav")
-						snd.Channel = CHAN_BODY
+						snd.Channel = CHAN_STATIC
 						snd.Volume = 0.5
 						snd.SoundLevel = 95
 					end
@@ -163,9 +154,7 @@ hook.Add("EntityEmitSound","TankHearSound",function(snd)
 			if (snd.Entity.NextStepSound && snd.Entity.NextStepSound > CurTime()) then
 				return false
 			else
-				timer.Simple(0.01, function()
-					snd.Entity.NextStepSound = CurTime() + math.Rand(0.12,0.15)
-				end)
+				snd.Entity.NextStepSound = CurTime() + 0.23
 				return true
 			end
 		end
@@ -504,6 +493,7 @@ end
 -- Simple functions used in keeping our enemy saved
 ----------------------------------------------------
 function ENT:SetEnemy(ent)
+	if (IsValid(ent) and ent:IsNextBot() and !string.find(ent:GetClass(),"npc_survivor")) then return end
 	self.Enemy = ent
 	if (ent != nil) then
 		if (ent:IsPlayer() and (ent:IsFlagSet(FL_NOTARGET) or GetConVar("ai_ignoreplayers"):GetBool())) then return end
@@ -585,7 +575,7 @@ function ENT:FindEnemy()
 	-- Here we loop through every entity the above search finds and see if it's the one we want
 		for k,v in ipairs( _ents ) do
 
-				if ( ( v:IsPlayer() or v:IsNPC()) and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
+				if ( ( v:IsPlayer() or v:IsNPC()) and !v:IsNextBot() and v:GetClass() != "npc_tank"  and v:GetClass() != "infected" and v:Health() > 0 and !v:IsFlagSet(FL_NOTARGET) ) then
 					-- We found one so lets set it as our enemy and return true
 					self:SetEnemy(v)
 					--self:EmitSound("HulkZombie.RageAtVictim")
@@ -792,9 +782,9 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 						dmginfo:SetDamageType(DMG_CRUSH)
 						dmginfo:SetDamage(self.AttackDamage / (GetConVar("skill"):GetInt()))
 						if (!self:GetEnemy().Incap) then
-							v:SetPos(v:GetPos() + Vector(0,0,90))
+							v:SetPos(v:GetPos() + Vector(0,0,30))
 						end
-						v:SetAbsVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
+						v:SetVelocity(v:GetAngles():Forward() * -1100 + Vector(0,0,100))
 						if (GetConVar("skill"):GetInt() > 1) then
 							dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 						end
@@ -1245,7 +1235,7 @@ function ENT:Think()
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3) then
-						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3) then
+						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and !self:GetEnemy().Incap) then
 							self:EmitSound("HulkZombie.Throw.Pickup")
 							local anim = self:SelectRandomSequence(self:GetSequenceActivity(self:LookupSequence("Throw_02")))
 							self.RangeAttackDelay = CurTime() + 6.0
@@ -1313,6 +1303,7 @@ function ENT:Think()
 							local selanim = self:LookupSequence("Hulk_RunAttack"..math.random(1,2).."_gesture")
 							if (self:GetEnemy().Incap) then
 								selanim = self:LookupSequence("Attack_Incap_03")
+								self:PlayActivityAndMove(self:GetSequenceActivity(selanim))
 							end
 							local anim = self:GetSequenceActivity(selanim)
 							self.MeleeAttackDelay = CurTime() + 2.0
@@ -1470,7 +1461,7 @@ function ENT:OnInjured( dmginfo )
 		self:EmitSound("HulkZombie.PainFire")
 		self.PainSoundTime2 = CurTime() + 10.0
 	end
-	if (dmginfo:GetAttacker() != nil and (dmginfo:GetAttacker():IsPlayer() || dmginfo:GetAttacker():IsNPC())) then 
+	if (dmginfo:GetAttacker() != nil and (dmginfo:GetAttacker():IsPlayer() || dmginfo:GetAttacker():IsNPC() || dmginfo:GetAttacker():IsNextBot() and string.find(dmginfo:GetAttacker():GetClass(),"npc_survivor"))) then 
 		if (self.Enemy != nil) then
 			self:SetEnemy(dmginfo:GetAttacker())
 		end

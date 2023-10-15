@@ -696,7 +696,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
+					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
 							"Weapon_Knife.Hit",
@@ -1124,27 +1124,30 @@ function ENT:Think()
 							timer.Simple(1, function()
 							
 								self:EmitSound("Vomit.Use")
+											local thevictim = ents.Create("infected")
+											thevictim:SetAngles(Angle(0,math.random(0,360),0))
+											thevictim:SetOwner(self)
+											thevictim:Spawn()
+											thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 								timer.Create("Vomit"..self:EntIndex(), 0.2, 3, function()
 									
 									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-										if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
+										if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self and !v.AttractedToInfected) then 
 											self.loco:ClearStuck() 
 											local dmginfo = DamageInfo()
 											dmginfo:SetAttacker(self)
 											dmginfo:SetInflictor(self)
 											dmginfo:SetDamageType(bit.bor(DMG_ACID,DMG_POISON))
 											dmginfo:SetDamage(8)
+											if (string.find(v:GetClass(),"survivor")) then
+												v:EmitSound(v.SurvivorName.."_BoomerReaction0"..math.random(1,9))
+											end
 											if (GetConVar("skill"):GetInt() > 1) then
 												dmginfo:ScaleDamage(1 + (GetConVar("skill"):GetInt() * 0.65))
 											end
 											v:TakeDamageInfo(dmginfo) 
 											v.AttractedToInfected = true
 											local plr = table.Random(lookForNextPlayer(self))
-											local thevictim = ents.Create("infected")
-											thevictim:SetAngles(Angle(0,math.random(0,360),0))
-											thevictim:SetOwner(self)
-											thevictim:Spawn()
-											thevictim:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
 											local pos = thevictim:FindSpot("random", {pos=v:GetPos(),radius = 2000,type="hiding",stepup,stepup=800,stepdown=800})
 											if (pos != nil) then
 												thevictim:SetPos(pos)
@@ -1521,7 +1524,7 @@ function ENT:OnKilled( dmginfo )
 								v:EmitSound(v.SurvivorName.."_BoomerReaction0"..math.random(1,9))
 							end
 							for k,v in ipairs(ents.FindInSphere(self:GetPos(), 300)) do
-								if ((v:IsPlayer() || v:IsNPC()) and v ~= self) then 
+								if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self and !v.AttractedToInfected) then 
 									self.loco:ClearStuck() 
 									local dmginfo = DamageInfo()
 									dmginfo:SetAttacker(self)

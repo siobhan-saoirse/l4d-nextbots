@@ -78,7 +78,7 @@ ENT.AttackDelay = 50
 ENT.AttackDamage = 6
 ENT.AttackRange = 65
 ENT.AttackRange2 = 120
-ENT.RangedAttackRange = 1800
+ENT.RangedAttackRange = 3000
 ENT.AutomaticFrameAdvance = true
 ENT.HaventLandedYet = false
 ENT.Walking = false
@@ -731,7 +731,7 @@ function ENT:HandleAnimEvent( event, eventTime, cycle, type, options )
 		if (IsValid(self:GetEnemy())) then
 			if (self:GetEnemy():Health() > 0) then
 				for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-					if ((v:IsPlayer() || v:IsNPC()) and !v:IsNextBot() and v ~= self and v:GetAimVector() != nil) then 
+					if ((v:IsPlayer() || v:IsNPC() || v:IsNextBot()) and v ~= self) then 
 						self.loco:ClearStuck() 
 						self:EmitSound(
 							"Weapon_Knife.Hit",
@@ -1257,14 +1257,14 @@ function ENT:Think()
 				if (math.random(1,100) == 1 and !self.PlayingSequence3 and !self.ContinueRunning and self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and self:GetEnemy():Health() > 0) then
 					local targetheadpos,targetheadang = self:GetEnemy():GetBonePosition(1) -- Get the position/angle of the head.
 					if (IsValid(self:GetEnemy()) and (!self.RangeAttackDelay || CurTime() > self.RangeAttackDelay) and !self.PlayingSequence3 and !self.Pounced) then
-						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self)) then
+						if (self:GetEnemy():GetPos():Distance(self:GetPos()) < self.RangedAttackRange and !self.PlayingSequence3 and self:GetEnemy():Visible(self) and !self:GetEnemy():GetNoDraw()) then
 							self.Pouncing = true
 							local act = self:GetSequenceActivity(self:LookupSequence("charger_charge"))
 							self:StartActivity( act )
 							self:ResetSequence( self:SelectWeightedSequence(act) )
 							self:EmitSound("ChargerZombie.Charge")
 							self.Ready = false
-							timer.Simple(3, function()
+							timer.Simple(2.5, function()
 								if (!self.Charged2) then
 									self.Ready = true
 									local act = self:GetSequenceActivity(self:LookupSequence("charger_run"))
@@ -1280,7 +1280,7 @@ function ENT:Think()
 									self.loco:SetDesiredSpeed( 250 * 2 )
 									self.loco:SetAcceleration( 500 * 2 )
 									for k,v in ipairs(ents.FindInSphere(self:GetPos(), 90)) do
-										if (v:EntIndex() == self.Enemy:EntIndex()) then
+										if (v:EntIndex() == self.Enemy:EntIndex() and !v:GetNoDraw()) then
 											if (!self.Charged) then
 
 												if (!IsValid(self.Enemy)) then return end
@@ -1297,6 +1297,9 @@ function ENT:Think()
 												local this = self
 												local animent = ents.Create( 'base_gmodentity' ) -- The entity used for the death animation	
 												animent:SetModel("models/survivors/anim_test.mdl")
+												if (string.find(self:GetEnemy():GetModel(),"survivor")) then
+													animent:SetModel(self:GetEnemy():GetModel())
+												end
 												animent:SetSkin(self:GetSkin())
 												animent:SetPos(self:GetPos())
 												animent:SetAngles(self:GetAngles() + Angle(0,180,0))
@@ -1358,10 +1361,22 @@ function ENT:Think()
 												end
 												self:GetEnemy().RagdollEntity2 = animent2
 												animent.AutomaticFrameAdvance = true
-												timer.Simple(1, function()
+												local time = 1
+												if (self:GetPos():Distance(self:GetEnemy():GetPos()) < 90) then
+													time = 0.2
+												end
+												timer.Simple(time, function()
 													if (!IsValid(self.Enemy)) then return end
-													self:EmitSound("ChargerZombie.Miss")
+													if (time == 0.2) then
+														self:EmitSound("ChargerZombie.Stagger")
+														self:EmitSound("ChargerZombie.Stagger")
+													else
+														self:EmitSound("ChargerZombie.Miss")
+													end
 													local act = self:GetSequenceActivity(self:LookupSequence("Charger_slam_ground"))
+													if (time == 0.2) then
+														act = self:GetSequenceActivity(self:LookupSequence("Shoved_Backward"))
+													end
 													self:StartActivity( act )
 													animent:SetCycle( 0 )
 													animent:ResetSequence( "GetUpFrom_Charger" )
