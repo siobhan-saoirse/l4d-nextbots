@@ -1554,13 +1554,13 @@ function ENT:OnKilled( dmginfo )
 					for k,v in ipairs(ents.FindInSphere(self:GetPos(),180)) do
 						if (string.find(v:GetClass(),"survivor")) then
 							
-							timer.Create("Cough"..v:EntIndex(), 1.5, math.random(3,10), function()
+							timer.Create("Cough"..v:EntIndex(), 1.2, math.random(3,10), function()
 								v:EmitSound(v.SurvivorName.."_Cough0"..math.random(1,4))
 							end)
 							
 						elseif (v:IsPlayer()) then
 						
-							timer.Create("Cough"..v:EntIndex(), 1.5, math.random(3,10), function()
+							timer.Create("Cough"..v:EntIndex(), 1.2, math.random(3,10), function()
 								v:EmitSound(table.Random({"player/smoker/voice/idle/gas_cough_1.wav","player/smoker/voice/idle/gas_cough_gasp_1.wav","player/smoker/voice/idle/gas_gasp_1.wav","player/smoker/voice/idle/gas_gasp_2.wav"}),85,100,0.5,CHAN_VOICE)
 								v:TakeDamage(2)
 							end)

@@ -1590,7 +1590,7 @@ function ENT:Think()
 				end
 			end
 		end
-		if (IsValid(self:GetEnemy())) then
+		if (IsValid(self:GetEnemy()) and self:GetEnemy():GetBonePosition(1)) then
 			local bound1, bound2 = self:GetCollisionBounds()
 			self:DirectPoseParametersAt((self:GetEnemy():GetBonePosition(1) - self:GetAngles():Forward())--[[ + Vector(0,0,math.max(bound1.z, bound2.z) - 30)]], "body", self:EyePos())
 			if (self:GetEnemy():Health() < 0 or self:GetEnemy():IsFlagSet(FL_NOTARGET) or (self:GetEnemy():IsPlayer() and GetConVar("ai_ignoreplayers"):GetBool())) then
@@ -1860,10 +1860,10 @@ function ENT:Think()
 					elseif (self.Ready) then
 						if (GetConVar("skill"):GetInt() > 1) then
 							self.loco:SetDesiredSpeed( 250  )
-							self.loco:SetAcceleration(150 )
+							self.loco:SetAcceleration(250 )
 						else
 							self.loco:SetDesiredSpeed(250 * self:GetModelScale())
-							self.loco:SetAcceleration(150 * self:GetModelScale())
+							self.loco:SetAcceleration(250 * self:GetModelScale())
 						end
 					end
 				end
